@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/src/LifeSwap.Api/Dockerfile
+    container_name: lifeswap-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Data Source=/data/lifeswap.db
+    volumes:
+      - lifeswap-data:/data
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: lifeswap-web
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+
+volumes:
+  lifeswap-data:
