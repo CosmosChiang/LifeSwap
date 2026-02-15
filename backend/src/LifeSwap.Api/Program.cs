@@ -22,9 +22,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddScoped<IRequestWorkflowService, RequestWorkflowService>();
+builder.Services.AddScoped<IAutomationWorkflowService, AutomationWorkflowService>();
 builder.Services.Configure<TeamsNotificationOptions>(
     builder.Configuration.GetSection(TeamsNotificationOptions.SectionName));
+builder.Services.Configure<AutomationOptions>(
+    builder.Configuration.GetSection(AutomationOptions.SectionName));
 builder.Services.AddHttpClient<ITeamsNotificationService, TeamsNotificationService>();
+builder.Services.AddHostedService<AutomationSchedulerHostedService>();
 
 var app = builder.Build();
 

@@ -15,6 +15,15 @@ public sealed class TeamsNotificationService(
     /// </summary>
     public async Task SendRequestStatusChangedAsync(TimeOffRequest request, string actionName, CancellationToken cancellationToken)
     {
+        var message = $"[LifeSwap] Request {request.Id} is {request.Status} ({actionName}). Employee: {request.EmployeeId}, Department: {request.DepartmentCode}, Date: {request.RequestDate:yyyy-MM-dd}.";
+        await SendMessageAsync(message, cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends plain text notification to Microsoft Teams.
+    /// </summary>
+    public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
+    {
         if (!options.Value.Enabled || string.IsNullOrWhiteSpace(options.Value.WebhookUrl))
         {
             return;
@@ -22,7 +31,7 @@ public sealed class TeamsNotificationService(
 
         var payload = new
         {
-            text = $"[LifeSwap] Request {request.Id} is {request.Status} ({actionName}). Employee: {request.EmployeeId}, Department: {request.DepartmentCode}, Date: {request.RequestDate:yyyy-MM-dd}.",
+            text = message,
         };
 
         var json = JsonSerializer.Serialize(payload);
@@ -33,12 +42,12 @@ public sealed class TeamsNotificationService(
             var response = await httpClient.PostAsync(options.Value.WebhookUrl, content, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("Teams notification failed for request {RequestId} with status code {StatusCode}.", request.Id, response.StatusCode);
+                logger.LogWarning("Teams notification failed with status code {StatusCode}.", response.StatusCode);
             }
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Teams notification threw an exception for request {RequestId}.", request.Id);
+            logger.LogWarning(exception, "Teams notification threw an exception.");
         }
     }
 }

@@ -110,7 +110,7 @@ Draft → Submitted → Approved / Rejected / Returned → Cancelled
 ### M3：Phase 2 擴充
 
 - 報表、分析、預警
-- Teams 與外部 API 整合
+- Teams 整合
 - 自動化排程與運維指標
 
 ### Phase 2 目前進度（2026-02-15）
@@ -121,8 +121,7 @@ Draft → Submitted → Approved / Rejected / Returned → Cancelled
 - 已完成：前端報表與預警檢視介面
 - 已完成：部門欄位落地（申請資料模型與查詢條件）
 - 已完成：Teams Webhook 通知整合骨架（可由設定啟用）
-- 待完成：外部系統整合（HR、ERP API）
-- 待完成：自動化流程（排程提醒、定期報告）
+- 已完成：自動化流程（排程提醒、定期報告）
 
 ## 驗收標準（Definition of Done）
 
@@ -136,7 +135,7 @@ Draft → Submitted → Approved / Rejected / Returned → Cancelled
 
 - 法規計算歧異：固定法域與計算口徑，規則表版本化
 - 權限邊界不清：先完成角色矩陣再開發 API
-- 整合依賴不確定：Phase 1 不阻塞外部整合，採延後策略
+- 整合依賴不確定：採分階段與可選擴充策略，不阻塞核心功能
 - 需求擴張：以 MVP 驗收準則控制範圍
 
 ## 開發協作規範
