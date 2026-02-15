@@ -2,6 +2,7 @@ using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
 using LifeSwap.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace LifeSwap.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public sealed class RequestsController(
     AppDbContext dbContext,
     IRequestWorkflowService workflowService,

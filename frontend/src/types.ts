@@ -75,3 +75,25 @@ export interface ReportQuery {
     department?: string
     monthlyOvertimeHourLimit?: number
 }
+// Authentication types
+export interface LoginRequest {
+    username: string
+    password: string
+}
+
+export interface LoginResponse {
+    token: string
+    username: string
+    employeeId: string
+    email: string
+    departmentCode: string
+    roles: string[]
+}
+
+export interface UserInfo {
+    username: string
+    employeeId: string
+    email: string
+    departmentCode: string
+    roles: string[]
+}

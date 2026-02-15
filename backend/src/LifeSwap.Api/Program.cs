@@ -2,11 +2,40 @@ using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
 using LifeSwap.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Add authentication services
+builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+// Add JWT authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secret = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured.");
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "LifeSwap",
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"] ?? "LifeSwap",
+        ValidateLifetime = true,
+    };
+});
+builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
@@ -40,6 +69,8 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var passwordHashService = scope.ServiceProvider.GetRequiredService<IPasswordHashService>();
+
     dbContext.Database.EnsureCreated();
 
     // Keep existing local SQLite databases compatible when new columns are introduced.
@@ -72,6 +103,9 @@ using (var scope = app.Services.CreateScope())
                 "ALTER TABLE TimeOffRequests ADD COLUMN DepartmentCode TEXT NOT NULL DEFAULT 'UNASSIGNED';");
         }
     }
+
+    // Seed initial data (roles and test users)
+    await SeedDataService.SeedAsync(dbContext, passwordHashService);
 }
 
 if (app.Environment.IsDevelopment())
@@ -80,6 +114,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("FrontendDev");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

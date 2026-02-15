@@ -1,6 +1,7 @@
 using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace LifeSwap.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "HR,Administrator")]
 public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
 {
     /// <summary>
