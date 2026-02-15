@@ -15,6 +15,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         {
             entity.HasKey(request => request.Id);
             entity.Property(request => request.EmployeeId).HasMaxLength(64).IsRequired();
+            entity.Property(request => request.DepartmentCode).HasMaxLength(32).IsRequired();
             entity.Property(request => request.Reason).HasMaxLength(512).IsRequired();
             entity.Property(request => request.ReviewComment).HasMaxLength(512);
             entity.Property(request => request.ReviewerId).HasMaxLength(64);

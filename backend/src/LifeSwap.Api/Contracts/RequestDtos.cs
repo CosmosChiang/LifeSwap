@@ -5,6 +5,7 @@ namespace LifeSwap.Api.Contracts;
 public sealed record CreateRequestDto(
     RequestType RequestType,
     string EmployeeId,
+    string? DepartmentCode,
     DateOnly RequestDate,
     TimeOnly? StartTime,
     TimeOnly? EndTime,

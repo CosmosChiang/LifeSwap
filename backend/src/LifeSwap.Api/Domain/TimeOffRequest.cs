@@ -8,6 +8,8 @@ public sealed class TimeOffRequest
 
     public string EmployeeId { get; set; } = string.Empty;
 
+    public string DepartmentCode { get; set; } = string.Empty;
+
     public DateOnly RequestDate { get; set; }
 
     public TimeOnly? StartTime { get; set; }

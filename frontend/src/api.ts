@@ -1,10 +1,15 @@
 import type {
+    ComplianceWarning,
     CreateRequestPayload,
+    ReportQuery,
+    ReportSummary,
     ReviewPayload,
+    TrendPoint,
     TimeOffRequest,
 } from './types'
 
 const baseUrl = '/api/requests'
+const reportsBaseUrl = '/api/reports'
 
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
@@ -58,4 +63,42 @@ export async function rejectRequest(requestId: string, payload: ReviewPayload): 
 export async function cancelRequest(requestId: string): Promise<TimeOffRequest> {
     const response = await fetch(`${baseUrl}/${requestId}/cancel`, { method: 'POST' })
     return handleResponse<TimeOffRequest>(response)
+}
+
+function buildReportQueryString(query: ReportQuery): string {
+    const params = new URLSearchParams({
+        startDate: query.startDate,
+        endDate: query.endDate,
+    })
+
+    if (query.requestType !== undefined) {
+        params.set('requestType', String(query.requestType))
+    }
+
+    if (query.department && query.department.trim()) {
+        params.set('department', query.department.trim())
+    }
+
+    if (query.monthlyOvertimeHourLimit !== undefined) {
+        params.set('monthlyOvertimeHourLimit', String(query.monthlyOvertimeHourLimit))
+    }
+
+    return params.toString()
+}
+
+export async function fetchReportSummary(query: ReportQuery): Promise<ReportSummary> {
+    const response = await fetch(`${reportsBaseUrl}/summary?${buildReportQueryString(query)}`)
+    return handleResponse<ReportSummary>(response)
+}
+
+export async function fetchReportTrends(query: ReportQuery): Promise<TrendPoint[]> {
+    const response = await fetch(`${reportsBaseUrl}/trends?${buildReportQueryString(query)}`)
+    return handleResponse<TrendPoint[]>(response)
+}
+
+export async function fetchComplianceWarnings(query: ReportQuery): Promise<ComplianceWarning[]> {
+    const response = await fetch(
+        `${reportsBaseUrl}/compliance-warnings?${buildReportQueryString(query)}`,
+    )
+    return handleResponse<ComplianceWarning[]>(response)
 }

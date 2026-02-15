@@ -9,7 +9,10 @@ namespace LifeSwap.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowService workflowService) : ControllerBase
+public sealed class RequestsController(
+    AppDbContext dbContext,
+    IRequestWorkflowService workflowService,
+    ITeamsNotificationService teamsNotificationService) : ControllerBase
 {
     /// <summary>
     /// Gets all requests with optional employee and status filtering.
@@ -80,6 +83,7 @@ public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowS
         {
             RequestType = input.RequestType,
             EmployeeId = input.EmployeeId.Trim(),
+            DepartmentCode = string.IsNullOrWhiteSpace(input.DepartmentCode) ? "UNASSIGNED" : input.DepartmentCode.Trim(),
             RequestDate = input.RequestDate,
             StartTime = input.StartTime,
             EndTime = input.EndTime,
@@ -114,6 +118,7 @@ public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowS
         request.SubmittedAt = DateTimeOffset.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Submitted", cancellationToken);
         return Ok(request);
     }
 
@@ -151,6 +156,7 @@ public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowS
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Approved", cancellationToken);
         return Ok(request);
     }
 
@@ -188,6 +194,7 @@ public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowS
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Rejected", cancellationToken);
         return Ok(request);
     }
 
@@ -213,6 +220,7 @@ public sealed class RequestsController(AppDbContext dbContext, IRequestWorkflowS
         request.CancelledAt = DateTimeOffset.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Cancelled", cancellationToken);
         return Ok(request);
     }
 }
