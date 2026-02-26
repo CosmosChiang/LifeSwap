@@ -123,6 +123,12 @@ Draft → Submitted → Approved / Rejected / Returned → Cancelled
 - 已完成：Teams Webhook 通知整合骨架（可由設定啟用）
 - 已完成：自動化流程（排程提醒、定期報告）
 
+### MVP 目前進度（2026-02-26）
+
+- 已完成：申請審核補齊「退回（Returned）」流程（API、前端審核動作、狀態顯示）
+- 已完成：退回後可重新送審，並保留站內通知與 Teams 狀態事件
+- 已完成：管理員可於帳號管理頁進行角色配置與快速角色切換
+
 ## 驗收標準（Definition of Done）
 
 - 每項功能具備：需求描述、流程、API、測試案例、驗收條件
