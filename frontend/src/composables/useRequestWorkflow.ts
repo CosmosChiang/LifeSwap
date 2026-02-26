@@ -3,6 +3,7 @@ import {
   approveRequest,
   cancelRequest,
   rejectRequest,
+  returnRequest,
   submitRequest,
 } from '../api'
 
@@ -76,6 +77,30 @@ export function useRequestWorkflow() {
     }
   }
 
+  async function handleReturn(
+    requestId: string,
+    reviewerId: string,
+    comment: string,
+  ): Promise<boolean> {
+    message.value = ''
+    errorMessage.value = ''
+    loading.value = true
+
+    try {
+      await returnRequest(requestId, {
+        reviewerId,
+        comment,
+      })
+      message.value = '申請已退回。'
+      return true
+    } catch (error) {
+      errorMessage.value = (error as Error).message
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function handleCancel(requestId: string): Promise<boolean> {
     message.value = ''
     errorMessage.value = ''
@@ -100,6 +125,7 @@ export function useRequestWorkflow() {
     handleSubmit,
     handleApprove,
     handleReject,
+    handleReturn,
     handleCancel,
   }
 }

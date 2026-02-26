@@ -11,9 +11,10 @@ const reviewerId = ref('M001')
 const reviewComment = ref('')
 const approveModalVisible = ref(false)
 const rejectModalVisible = ref(false)
+const returnModalVisible = ref(false)
 const selectedRequest = ref<TimeOffRequest | null>(null)
 
-const { handleApprove, handleReject } = useRequestWorkflow()
+const { handleApprove, handleReject, handleReturn } = useRequestWorkflow()
 
 // Only show submitted requests
 const submittedRequests = computed(() =>
@@ -45,12 +46,6 @@ const columns = [
     width: 100,
   },
   {
-    title: '部門',
-    dataIndex: 'departmentCode',
-    key: 'departmentCode',
-    width: 100,
-  },
-  {
     title: '類型',
     dataIndex: 'requestType',
     key: 'requestType',
@@ -67,6 +62,11 @@ const columns = [
     dataIndex: 'reason',
     key: 'reason',
   },
+  {
+    title: '操作',
+    key: 'actions',
+    width: 220,
+  },
 ]
 
 function openApproveModal(request: TimeOffRequest) {
@@ -77,6 +77,11 @@ function openApproveModal(request: TimeOffRequest) {
 function openRejectModal(request: TimeOffRequest) {
   selectedRequest.value = request
   rejectModalVisible.value = true
+}
+
+function openReturnModal(request: TimeOffRequest) {
+  selectedRequest.value = request
+  returnModalVisible.value = true
 }
 
 async function handleApproveSubmit() {
@@ -99,6 +104,16 @@ async function handleRejectSubmit() {
   }
 }
 
+async function handleReturnSubmit() {
+  if (!selectedRequest.value) return
+  const success = await handleReturn(selectedRequest.value.id, reviewerId.value, reviewComment.value)
+  if (success) {
+    returnModalVisible.value = false
+    reviewComment.value = ''
+    await loadRequests()
+  }
+}
+
 import { computed } from 'vue'
 
 onMounted(() => {
@@ -109,34 +124,23 @@ onMounted(() => {
 <template>
   <div style="display: grid; gap: 24px">
     <a-card :title="`待審核申請 (${submittedRequests.length})`" :loading="loading">
-      <a-table
-        :columns="columns"
-        :data-source="submittedRequests"
-        :row-key="(record: TimeOffRequest) => record.id"
-        :pagination="{ pageSize: 10 }"
-        size="small"
-        bordered
-      >
+      <a-table :columns="columns" :data-source="submittedRequests" row-key="id" :pagination="{ pageSize: 10 }"
+        size="small" bordered>
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'requestType'">
-            {{ getRequestTypeLabel((record as TimeOffRequest).requestType) }}
+            {{ getRequestTypeLabel(record.requestType) }}
           </template>
 
-          <template v-if="!column.key">
+          <template v-if="column.key === 'actions'">
             <div style="display: flex; gap: 8px">
-              <a-button
-                size="small"
-                type="primary"
-                @click="openApproveModal(record as TimeOffRequest)"
-              >
+              <a-button size="small" type="primary" @click="openApproveModal(record)">
                 核准
               </a-button>
-              <a-button
-                size="small"
-                danger
-                @click="openRejectModal(record as TimeOffRequest)"
-              >
+              <a-button size="small" danger @click="openRejectModal(record)">
                 拒絕
+              </a-button>
+              <a-button size="small" @click="openReturnModal(record)">
+                退回
               </a-button>
             </div>
           </template>
@@ -145,38 +149,41 @@ onMounted(() => {
     </a-card>
 
     <!-- Approve Modal -->
-    <a-modal
-      v-model:visible="approveModalVisible"
-      title="核准申請"
-      ok-text="確認核准"
-      cancel-text="取消"
-      @ok="handleApproveSubmit"
-    >
+    <a-modal :open="approveModalVisible" title="核准申請" ok-text="確認核准" cancel-text="取消" @ok="handleApproveSubmit"
+      @update:open="approveModalVisible = $event">
       <a-form layout="vertical">
         <a-form-item label="審核者編號">
-          <a-input v-model:value="reviewerId" />
+          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
         </a-form-item>
         <a-form-item label="審核備註">
-          <a-textarea v-model:value="reviewComment" :rows="4" />
+          <a-textarea :value="reviewComment" :rows="4" @update:value="reviewComment = $event" />
         </a-form-item>
       </a-form>
     </a-modal>
 
     <!-- Reject Modal -->
-    <a-modal
-      v-model:visible="rejectModalVisible"
-      title="拒絕申請"
-      ok-text="確認拒絕"
-      cancel-text="取消"
-      ok-button-danger
-      @ok="handleRejectSubmit"
-    >
+    <a-modal :open="rejectModalVisible" title="拒絕申請" ok-text="確認拒絕" cancel-text="取消" ok-button-danger
+      @ok="handleRejectSubmit" @update:open="rejectModalVisible = $event">
       <a-form layout="vertical">
         <a-form-item label="審核者編號">
-          <a-input v-model:value="reviewerId" />
+          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
         </a-form-item>
         <a-form-item label="拒絕原因（必填）">
-          <a-textarea v-model:value="reviewComment" :rows="4" placeholder="請說明拒絕原因" />
+          <a-textarea :value="reviewComment" :rows="4" placeholder="請說明拒絕原因" @update:value="reviewComment = $event" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- Return Modal -->
+    <a-modal :open="returnModalVisible" title="退回申請" ok-text="確認退回" cancel-text="取消" @ok="handleReturnSubmit"
+      @update:open="returnModalVisible = $event">
+      <a-form layout="vertical">
+        <a-form-item label="審核者編號">
+          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
+        </a-form-item>
+        <a-form-item label="退回說明（建議填寫）">
+          <a-textarea :value="reviewComment" :rows="4" placeholder="請說明需補件或修正內容"
+            @update:value="reviewComment = $event" />
         </a-form-item>
       </a-form>
     </a-modal>

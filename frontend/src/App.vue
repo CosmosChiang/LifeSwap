@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import AppLayout from './components/common/AppLayout.vue'
 </script>
 
 <template>
-  <AppLayout />
+  <router-view v-slot="{ Component }">
+    <component :is="Component" v-if="$route.name === 'Login'" />
+    <AppLayout v-else>
+      <component :is="Component" />
+    </AppLayout>
+  </router-view>
 </template>

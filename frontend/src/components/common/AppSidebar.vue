@@ -9,6 +9,7 @@ import {
   BarChartOutlined,
   BellOutlined,
   LogoutOutlined,
+  LockOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue'
 
@@ -16,6 +17,20 @@ const router = useRouter()
 const { currentUser, hasAnyRole, logout } = useAuth()
 
 const allMenuItems = [
+    {
+      key: '/admin/users',
+      label: '帳號管理',
+      icon: UserOutlined,
+      route: '/admin/users',
+      roles: ['Administrator'],
+    },
+    {
+      key: '/admin/roles',
+      label: '角色管理',
+      icon: UserOutlined,
+      route: '/admin/roles',
+      roles: ['Administrator'],
+    },
   {
     key: '/',
     label: '首頁',
@@ -35,20 +50,27 @@ const allMenuItems = [
     label: '待審核',
     icon: CheckSquareOutlined,
     route: '/review',
-    roles: ['Manager', 'HR', 'Administrator'],
+    roles: ['Manager', 'Administrator'],
   },
   {
     key: '/reports',
     label: '報表與預警',
     icon: BarChartOutlined,
     route: '/reports',
-    roles: ['HR', 'Administrator'],
+    roles: ['Manager', 'Administrator'],
   },
   {
     key: '/notifications',
     label: '通知',
     icon: BellOutlined,
     route: '/notifications',
+    roles: [],
+  },
+  {
+    key: '/password',
+    label: '修改密碼',
+    icon: LockOutlined,
+    route: '/password',
     roles: [],
   },
 ]

@@ -2,8 +2,10 @@ using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
 using LifeSwap.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LifeSwap.Api.Controllers;
 
@@ -51,5 +53,47 @@ public sealed class AuthController(
             user.Email,
             user.DepartmentCode,
             roles.Select(r => r.Name).ToList()));
+    }
+
+    /// <summary>
+    /// Changes current user's password.
+    /// </summary>
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePasswordAsync(
+        [FromBody] ChangePasswordRequestDto input,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(input.CurrentPassword) || string.IsNullOrWhiteSpace(input.NewPassword))
+        {
+            return BadRequest("CurrentPassword and NewPassword are required.");
+        }
+
+        if (input.NewPassword.Length < 8)
+        {
+            return BadRequest("NewPassword must be at least 8 characters.");
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!passwordHashService.VerifyPassword(input.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest("Current password is incorrect.");
+        }
+
+        user.PasswordHash = passwordHashService.HashPassword(input.NewPassword);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok();
     }
 }

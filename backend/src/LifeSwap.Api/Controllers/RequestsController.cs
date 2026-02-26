@@ -5,6 +5,7 @@ using LifeSwap.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LifeSwap.Api.Controllers;
 
@@ -25,9 +26,32 @@ public sealed class RequestsController(
         [FromQuery] RequestStatus? status,
         CancellationToken cancellationToken)
     {
+        var currentEmployeeId = User.FindFirstValue("EmployeeId");
+        var currentRoles = User.FindAll(ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var canViewAllRequests =
+            currentRoles.Contains("Administrator") ||
+            currentRoles.Contains("Manager");
+
         var query = dbContext.TimeOffRequests.AsNoTracking().AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(employeeId))
+        if (!canViewAllRequests)
+        {
+            if (string.IsNullOrWhiteSpace(currentEmployeeId))
+            {
+                return Forbid();
+            }
+
+            if (!string.IsNullOrWhiteSpace(employeeId) &&
+                !string.Equals(employeeId, currentEmployeeId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            query = query.Where(request => request.EmployeeId == currentEmployeeId);
+        }
+        else if (!string.IsNullOrWhiteSpace(employeeId))
         {
             query = query.Where(request => request.EmployeeId == employeeId);
         }
@@ -113,7 +137,7 @@ public sealed class RequestsController(
 
         if (!workflowService.CanSubmit(request))
         {
-            return BadRequest("Only draft requests can be submitted.");
+            return BadRequest("Only draft or returned requests can be submitted.");
         }
 
         request.Status = RequestStatus.Submitted;
@@ -127,6 +151,7 @@ public sealed class RequestsController(
     /// <summary>
     /// Approves a submitted request.
     /// </summary>
+    [Authorize(Roles = "Manager,Administrator")]
     [HttpPost("{requestId:guid}/approve")]
     public async Task<ActionResult<TimeOffRequest>> ApproveAsync(
         Guid requestId,
@@ -165,6 +190,7 @@ public sealed class RequestsController(
     /// <summary>
     /// Rejects a submitted request.
     /// </summary>
+    [Authorize(Roles = "Manager,Administrator")]
     [HttpPost("{requestId:guid}/reject")]
     public async Task<ActionResult<TimeOffRequest>> RejectAsync(
         Guid requestId,
@@ -197,6 +223,45 @@ public sealed class RequestsController(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await teamsNotificationService.SendRequestStatusChangedAsync(request, "Rejected", cancellationToken);
+        return Ok(request);
+    }
+
+    /// <summary>
+    /// Returns a submitted request to the applicant for revision.
+    /// </summary>
+    [Authorize(Roles = "Manager,Administrator")]
+    [HttpPost("{requestId:guid}/return")]
+    public async Task<ActionResult<TimeOffRequest>> ReturnAsync(
+        Guid requestId,
+        [FromBody] ReviewRequestDto input,
+        CancellationToken cancellationToken)
+    {
+        var request = await dbContext.TimeOffRequests.FirstOrDefaultAsync(entity => entity.Id == requestId, cancellationToken);
+
+        if (request is null)
+        {
+            return NotFound();
+        }
+
+        if (!workflowService.CanReturn(request))
+        {
+            return BadRequest("Only submitted requests can be returned.");
+        }
+
+        request.Status = RequestStatus.Returned;
+        request.ReviewerId = input.ReviewerId;
+        request.ReviewComment = input.Comment;
+        request.ReviewedAt = DateTimeOffset.UtcNow;
+
+        dbContext.Notifications.Add(new AppNotification
+        {
+            RecipientEmployeeId = request.EmployeeId,
+            Title = "申請已退回",
+            Message = $"你的申請 {request.Id} 已被退回，請修正後重新送審。",
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Returned", cancellationToken);
         return Ok(request);
     }
 

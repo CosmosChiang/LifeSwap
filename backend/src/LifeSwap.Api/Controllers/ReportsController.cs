@@ -9,7 +9,7 @@ namespace LifeSwap.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "HR,Administrator")]
+[Authorize(Roles = "Manager,Administrator")]
 public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
 {
     /// <summary>
@@ -20,11 +20,11 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [FromQuery] RequestType? requestType,
-        [FromQuery] string? department,
+        [FromQuery] string? employeeId,
         CancellationToken cancellationToken)
     {
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
-        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, department)
+        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId)
             .ToListAsync(cancellationToken);
 
         var approvedOvertimeHours = requests
@@ -39,7 +39,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
             StartDate = rangeStart,
             EndDate = rangeEnd,
             RequestType = requestType,
-            Department = department,
+            EmployeeId = employeeId,
             TotalRequests = totalRequests,
             SubmittedCount = requests.Count(request => request.Status == RequestStatus.Submitted),
             ApprovedCount = approvedCount,
@@ -60,11 +60,11 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [FromQuery] RequestType? requestType,
-        [FromQuery] string? department,
+        [FromQuery] string? employeeId,
         CancellationToken cancellationToken)
     {
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
-        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, department)
+        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId)
             .ToListAsync(cancellationToken);
 
         var trend = requests
@@ -94,7 +94,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
         [FromQuery] double monthlyOvertimeHourLimit = 46,
-        [FromQuery] string? department = null,
+        [FromQuery] string? employeeId = null,
         CancellationToken cancellationToken = default)
     {
         if (monthlyOvertimeHourLimit <= 0)
@@ -104,7 +104,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
 
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
 
-        var approvedOvertimeRequests = await BuildFilteredQuery(rangeStart, rangeEnd, RequestType.Overtime, department)
+        var approvedOvertimeRequests = await BuildFilteredQuery(rangeStart, rangeEnd, RequestType.Overtime, employeeId)
             .Where(request => request.Status == RequestStatus.Approved)
             .ToListAsync(cancellationToken);
 
@@ -159,7 +159,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         DateOnly startDate,
         DateOnly endDate,
         RequestType? requestType,
-        string? department)
+        string? employeeId)
     {
         var query = dbContext.TimeOffRequests
             .AsNoTracking()
@@ -170,10 +170,10 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
             query = query.Where(request => request.RequestType == requestType);
         }
 
-        if (!string.IsNullOrWhiteSpace(department))
+        if (!string.IsNullOrWhiteSpace(employeeId))
         {
-            var normalizedDepartment = department.Trim();
-            query = query.Where(request => request.DepartmentCode == normalizedDepartment);
+            var normalizedEmployeeId = employeeId.Trim();
+            query = query.Where(request => request.EmployeeId == normalizedEmployeeId);
         }
 
         return query;

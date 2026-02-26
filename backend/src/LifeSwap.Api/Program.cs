@@ -52,6 +52,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.AddScoped<IRequestWorkflowService, RequestWorkflowService>();
 builder.Services.AddScoped<IAutomationWorkflowService, AutomationWorkflowService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
 builder.Services.Configure<TeamsNotificationOptions>(
     builder.Configuration.GetSection(TeamsNotificationOptions.SectionName));
 builder.Services.Configure<AutomationOptions>(

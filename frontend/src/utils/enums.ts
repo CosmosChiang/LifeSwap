@@ -16,6 +16,8 @@ export function getRequestStatusLabel(value: number): string {
       return 'Rejected'
     case 4:
       return 'Cancelled'
+    case 5:
+      return 'Returned'
     default:
       return 'Unknown'
   }
@@ -33,6 +35,8 @@ export function getRequestStatusColor(value: number): string {
       return 'error'
     case 4:
       return 'default'
+    case 5:
+      return 'warning'
     default:
       return 'default'
   }

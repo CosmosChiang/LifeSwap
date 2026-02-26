@@ -9,7 +9,7 @@ public sealed class RequestWorkflowService : IRequestWorkflowService
     /// </summary>
     public bool CanSubmit(TimeOffRequest request)
     {
-        return request.Status is RequestStatus.Draft;
+        return request.Status is RequestStatus.Draft or RequestStatus.Returned;
     }
 
     /// <summary>
@@ -29,10 +29,18 @@ public sealed class RequestWorkflowService : IRequestWorkflowService
     }
 
     /// <summary>
+    /// Determines whether a request can be returned to the applicant.
+    /// </summary>
+    public bool CanReturn(TimeOffRequest request)
+    {
+        return request.Status is RequestStatus.Submitted;
+    }
+
+    /// <summary>
     /// Determines whether a request can be cancelled by the applicant.
     /// </summary>
     public bool CanCancel(TimeOffRequest request)
     {
-        return request.Status is RequestStatus.Draft or RequestStatus.Submitted;
+        return request.Status is RequestStatus.Draft or RequestStatus.Submitted or RequestStatus.Returned;
     }
 }

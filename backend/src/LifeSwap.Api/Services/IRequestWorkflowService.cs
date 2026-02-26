@@ -10,5 +10,7 @@ public interface IRequestWorkflowService
 
     bool CanReject(TimeOffRequest request);
 
+    bool CanReturn(TimeOffRequest request);
+
     bool CanCancel(TimeOffRequest request);
 }

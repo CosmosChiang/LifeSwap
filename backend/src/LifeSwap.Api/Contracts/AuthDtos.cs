@@ -11,3 +11,7 @@ public sealed record LoginResponseDto(
     string Email,
     string DepartmentCode,
     IReadOnlyCollection<string> Roles);
+
+public sealed record ChangePasswordRequestDto(
+    string CurrentPassword,
+    string NewPassword);

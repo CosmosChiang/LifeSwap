@@ -70,7 +70,7 @@ public sealed class ReportsControllerTests
     }
 
     [Fact]
-    public async Task GetSummaryAsync_FiltersByDepartmentCode()
+    public async Task GetSummaryAsync_FiltersByEmployeeId()
     {
         await using var dbContext = await CreateDbContextAsync();
         dbContext.TimeOffRequests.AddRange(
@@ -104,7 +104,7 @@ public sealed class ReportsControllerTests
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 2, 28),
             null,
-            "ENG",
+            "E101",
             CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(response.Result);

@@ -15,7 +15,7 @@ const reportFilters = reactive({
   startDate: dayjs().subtract(30, 'days') as Dayjs,
   endDate: dayjs() as Dayjs,
   requestType: '' as string | undefined,
-  department: '',
+  employeeId: '',
   monthlyOvertimeHourLimit: 46,
 })
 
@@ -28,7 +28,7 @@ async function loadReports() {
       startDate: reportFilters.startDate?.format('YYYY-MM-DD'),
       endDate: reportFilters.endDate?.format('YYYY-MM-DD'),
       requestType: reportFilters.requestType ? (Number(reportFilters.requestType) as 0 | 1) : undefined,
-      department: reportFilters.department || undefined,
+      employeeId: reportFilters.employeeId || undefined,
       monthlyOvertimeHourLimit: reportFilters.monthlyOvertimeHourLimit,
     }
 
@@ -134,21 +134,20 @@ onMounted(() => {
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="開始日期">
-            <a-date-picker v-model:value="reportFilters.startDate" style="width: 100%" />
+            <a-date-picker :value="reportFilters.startDate" style="width: 100%"
+              @update:value="reportFilters.startDate = $event" />
           </a-form-item>
         </a-col>
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="結束日期">
-            <a-date-picker v-model:value="reportFilters.endDate" style="width: 100%" />
+            <a-date-picker :value="reportFilters.endDate" style="width: 100%"
+              @update:value="reportFilters.endDate = $event" />
           </a-form-item>
         </a-col>
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="申請類型">
-            <a-select
-              v-model:value="reportFilters.requestType"
-              placeholder="全部"
-              allow-clear
-            >
+            <a-select :value="reportFilters.requestType" placeholder="全部" allow-clear
+              @update:value="reportFilters.requestType = $event">
               <a-select-option value="">全部</a-select-option>
               <a-select-option value="0">加班</a-select-option>
               <a-select-option value="1">補休</a-select-option>
@@ -156,22 +155,17 @@ onMounted(() => {
           </a-form-item>
         </a-col>
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="部門代碼">
-            <a-input
-              v-model:value="reportFilters.department"
-              placeholder="例如 ENG"
-            />
+          <a-form-item label="員工編號">
+            <a-input :value="reportFilters.employeeId" placeholder="例如 E001"
+              @update:value="reportFilters.employeeId = $event" />
           </a-form-item>
         </a-col>
       </a-row>
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="月加班上限（小時）">
-            <a-input-number
-              v-model:value="reportFilters.monthlyOvertimeHourLimit"
-              :min="1"
-              style="width: 100%"
-            />
+            <a-input-number :value="reportFilters.monthlyOvertimeHourLimit" :min="1" style="width: 100%"
+              @update:value="reportFilters.monthlyOvertimeHourLimit = $event" />
           </a-form-item>
         </a-col>
         <a-col :xs="24" :sm="24" :md="18">
@@ -185,108 +179,49 @@ onMounted(() => {
     </a-card>
 
     <!-- Error Alert -->
-    <a-alert
-      v-if="errorMessage"
-      :message="errorMessage"
-      type="error"
-      show-icon
-      closable
-      @close="errorMessage = ''"
-    />
+    <a-alert v-if="errorMessage" :message="errorMessage" type="error" show-icon closable @close="errorMessage = ''" />
 
     <!-- Report Summary -->
-    <a-card
-      v-if="reportSummary"
-      title="摘要統計"
-      :loading="reportLoading"
-    >
+    <a-card v-if="reportSummary" title="摘要統計" :loading="reportLoading">
       <a-row :gutter="[16, 16]">
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="總申請"
-            :value="reportSummary.totalRequests"
-          />
+          <a-statistic title="總申請" :value="reportSummary.totalRequests" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="送審中"
-            :value="reportSummary.submittedCount"
-            value-style="{ color: '#faad14' }"
-          />
+          <a-statistic title="送審中" :value="reportSummary.submittedCount" value-style="{ color: '#faad14' }" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="已核准"
-            :value="reportSummary.approvedCount"
-            value-style="{ color: '#52c41a' }"
-          />
+          <a-statistic title="已核准" :value="reportSummary.approvedCount" value-style="{ color: '#52c41a' }" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="已拒絕"
-            :value="reportSummary.rejectedCount"
-            value-style="{ color: '#f5222d' }"
-          />
+          <a-statistic title="已拒絕" :value="reportSummary.rejectedCount" value-style="{ color: '#f5222d' }" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="已取消"
-            :value="reportSummary.cancelledCount"
-          />
+          <a-statistic title="已取消" :value="reportSummary.cancelledCount" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="核准加班時數"
-            :value="reportSummary.approvedOvertimeHours"
-            suffix=" hrs"
-          />
+          <a-statistic title="核准加班時數" :value="reportSummary.approvedOvertimeHours" suffix=" hrs" />
         </a-col>
         <a-col :xs="24" :sm="12" :md="8">
-          <a-statistic
-            title="核准率"
-            :value="(reportSummary.approvalRate * 100).toFixed(2)"
-            suffix="%"
-          />
+          <a-statistic title="核准率" :value="(reportSummary.approvalRate * 100).toFixed(2)" suffix="%" />
         </a-col>
       </a-row>
     </a-card>
 
     <!-- Trends Table -->
-    <a-card
-      title="日趨勢分析"
-      :loading="reportLoading"
-    >
-      <a-table
-        v-if="reportTrends.length > 0"
-        :columns="trendColumns"
-        :data-source="reportTrends"
-        :row-key="(record: TrendPoint) => record.date"
-        :pagination="{ pageSize: 20 }"
-        size="small"
-        bordered
-      />
+    <a-card title="日趨勢分析" :loading="reportLoading">
+      <a-table v-if="reportTrends.length > 0" :columns="trendColumns" :data-source="reportTrends" row-key="date"
+        :pagination="{ pageSize: 20 }" size="small" bordered />
       <a-empty v-else description="目前區間沒有趨勢資料" />
     </a-card>
 
     <!-- Compliance Warnings Table -->
-    <a-card
-      title="法規預警"
-      :loading="reportLoading"
-    >
-      <a-table
-        v-if="complianceDataSource.length > 0"
-        :columns="complianceColumns"
-        :data-source="complianceDataSource"
-        :row-key="(record: any) => record.key"
-        :pagination="{ pageSize: 20 }"
-        size="small"
-        bordered
-      >
+    <a-card title="法規預警" :loading="reportLoading">
+      <a-table v-if="complianceDataSource.length > 0" :columns="complianceColumns" :data-source="complianceDataSource"
+        row-key="key" :pagination="{ pageSize: 20 }" size="small" bordered>
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'severity'">
-            <a-tag
-              :color="record.severity === 'HIGH' ? 'red' : record.severity === 'MEDIUM' ? 'orange' : 'blue'"
-            >
+            <a-tag :color="record.severity === 'HIGH' ? 'red' : record.severity === 'MEDIUM' ? 'orange' : 'blue'">
               {{ record.severity }}
             </a-tag>
           </template>

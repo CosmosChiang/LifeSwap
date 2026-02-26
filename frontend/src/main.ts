@@ -9,6 +9,18 @@ const app = createApp(App)
 // Import routes dynamically
 const routes = [
   {
+    path: '/admin/users',
+    component: () => import('./views/AdminUsers.vue'),
+    name: 'AdminUsers',
+    meta: { requiresAuth: true, roles: ['Administrator'] },
+  },
+  {
+    path: '/admin/roles',
+    component: () => import('./views/AdminRoles.vue'),
+    name: 'AdminRoles',
+    meta: { requiresAuth: true, roles: ['Administrator'] },
+  },
+  {
     path: '/login',
     component: () => import('./views/Login.vue'),
     name: 'Login',
@@ -30,18 +42,24 @@ const routes = [
     path: '/review',
     component: () => import('./views/ToReview.vue'),
     name: 'ToReview',
-    meta: { requiresAuth: true, roles: ['Manager', 'HR', 'Administrator'] },
+    meta: { requiresAuth: true, roles: ['Manager', 'Administrator'] },
   },
   {
     path: '/reports',
     component: () => import('./views/Reports.vue'),
     name: 'Reports',
-    meta: { requiresAuth: true, roles: ['HR', 'Administrator'] },
+    meta: { requiresAuth: true, roles: ['Manager', 'Administrator'] },
   },
   {
     path: '/notifications',
     component: () => import('./views/Notifications.vue'),
     name: 'Notifications',
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/password',
+    component: () => import('./views/ChangePassword.vue'),
+    name: 'ChangePassword',
     meta: { requiresAuth: true },
   },
 ]

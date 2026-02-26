@@ -10,7 +10,7 @@ public sealed class ReportSummaryDto
 
     public RequestType? RequestType { get; init; }
 
-    public string? Department { get; init; }
+    public string? EmployeeId { get; init; }
 
     public int TotalRequests { get; init; }
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import dayjs, { type Dayjs } from 'dayjs'
 import { createRequest } from '../../../api'
 import type { CreateRequestPayload } from '../../../types'
 
@@ -12,13 +13,21 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const form = reactive<CreateRequestPayload>({
+interface RequestFormModel {
+  requestType: CreateRequestPayload['requestType']
+  employeeId: string
+  requestDate: Dayjs
+  startTime: Dayjs | null
+  endTime: Dayjs | null
+  reason: string
+}
+
+const form = reactive<RequestFormModel>({
   requestType: props.initialData?.requestType ?? 0,
   employeeId: props.initialData?.employeeId ?? 'E001',
-  departmentCode: props.initialData?.departmentCode ?? 'ENG',
-  requestDate: props.initialData?.requestDate ?? new Date().toISOString().slice(0, 10),
-  startTime: props.initialData?.startTime ?? '18:00',
-  endTime: props.initialData?.endTime ?? '20:00',
+  requestDate: props.initialData?.requestDate ? dayjs(props.initialData.requestDate) : dayjs(),
+  startTime: props.initialData?.startTime ? dayjs(props.initialData.startTime, 'HH:mm') : dayjs('18:00', 'HH:mm'),
+  endTime: props.initialData?.endTime ? dayjs(props.initialData.endTime, 'HH:mm') : dayjs('20:00', 'HH:mm'),
   reason: props.initialData?.reason ?? '',
 })
 
@@ -35,14 +44,22 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    await createRequest({
-      ...form,
+    const payload: CreateRequestPayload = {
+      requestType: form.requestType,
+      employeeId: form.employeeId,
+      requestDate: form.requestDate.format('YYYY-MM-DD'),
+      startTime: form.startTime ? form.startTime.format('HH:mm') : null,
+      endTime: form.endTime ? form.endTime.format('HH:mm') : null,
       reason: form.reason.trim(),
+    }
+
+    await createRequest({
+      ...payload,
     })
     emit('success')
     // Reset form
     form.reason = ''
-    form.requestDate = new Date().toISOString().slice(0, 10)
+    form.requestDate = dayjs()
   } catch (error) {
     errorMessage.value = (error as Error).message
   } finally {
@@ -58,21 +75,14 @@ function handleReset() {
 
 <template>
   <div>
-    <a-alert
-      v-if="errorMessage"
-      :message="errorMessage"
-      type="error"
-      show-icon
-      closable
-      style="margin-bottom: 16px"
-      @close="errorMessage = ''"
-    />
+    <a-alert v-if="errorMessage" :message="errorMessage" type="error" show-icon closable style="margin-bottom: 16px"
+      @close="errorMessage = ''" />
 
     <a-form layout="vertical">
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="申請類型">
-            <a-select v-model:value="form.requestType">
+            <a-select :value="form.requestType" @update:value="form.requestType = $event">
               <a-select-option :value="0">加班</a-select-option>
               <a-select-option :value="1">補休</a-select-option>
             </a-select>
@@ -81,19 +91,13 @@ function handleReset() {
 
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="員工編號">
-            <a-input v-model:value="form.employeeId" />
-          </a-form-item>
-        </a-col>
-
-        <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="部門代碼">
-            <a-input v-model:value="form.departmentCode" />
+            <a-input :value="form.employeeId" @update:value="form.employeeId = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="日期">
-            <a-date-picker v-model:value="form.requestDate" style="width: 100%" />
+            <a-date-picker :value="form.requestDate" style="width: 100%" @update:value="form.requestDate = $event" />
           </a-form-item>
         </a-col>
       </a-row>
@@ -101,23 +105,21 @@ function handleReset() {
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="開始時間">
-            <a-time-picker v-model:value="form.startTime" format="HH:mm" style="width: 100%" />
+            <a-time-picker :value="form.startTime" format="HH:mm" style="width: 100%"
+              @update:value="form.startTime = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24" :sm="12" :md="6">
           <a-form-item label="結束時間">
-            <a-time-picker v-model:value="form.endTime" format="HH:mm" style="width: 100%" />
+            <a-time-picker :value="form.endTime" format="HH:mm" style="width: 100%"
+              @update:value="form.endTime = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24">
           <a-form-item label="申請原因">
-            <a-textarea
-              v-model:value="form.reason"
-              placeholder="請輸入申請原因（必填）"
-              :rows="4"
-            />
+            <a-textarea :value="form.reason" placeholder="請輸入申請原因（必填）" :rows="4" @update:value="form.reason = $event" />
           </a-form-item>
         </a-col>
       </a-row>

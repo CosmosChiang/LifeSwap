@@ -23,7 +23,7 @@ const handleLogin = async () => {
       username: formState.value.username,
       password: formState.value.password,
     })
-    
+
     message.success('登錄成功')
     router.push('/')
   } catch (err) {
@@ -35,7 +35,6 @@ const handleLogin = async () => {
 const demoUsers = [
   { username: 'employee1', role: '員工', password: 'Password123!' },
   { username: 'manager1', role: '主管', password: 'Password123!' },
-  { username: 'hr_admin', role: 'HR', password: 'Password123!' },
   { username: 'admin', role: '管理員', password: 'Password123!' },
 ]
 
@@ -48,38 +47,19 @@ const fillDemoUser = (username: string, password: string) => {
 <template>
   <div class="login-container">
     <a-card class="login-card" title="LifeSwap 登錄">
-      <a-form
-        :model="formState"
-        layout="vertical"
-        @submit.prevent="handleLogin"
-      >
+      <a-form :model="formState" layout="vertical" @submit.prevent="handleLogin">
         <a-form-item label="用戶名" required>
-          <a-input
-            v-model:value="formState.username"
-            placeholder="請輸入用戶名"
-            size="large"
-            :disabled="isLoading"
-          />
+          <a-input :value="formState.username" placeholder="請輸入用戶名" size="large" :disabled="isLoading"
+            @update:value="formState.username = $event" />
         </a-form-item>
 
         <a-form-item label="密碼" required>
-          <a-input-password
-            v-model:value="formState.password"
-            placeholder="請輸入密碼"
-            size="large"
-            :disabled="isLoading"
-            @pressEnter="handleLogin"
-          />
+          <a-input-password :value="formState.password" placeholder="請輸入密碼" size="large" :disabled="isLoading"
+            @pressEnter="handleLogin" @update:value="formState.password = $event" />
         </a-form-item>
 
         <a-form-item>
-          <a-button
-            type="primary"
-            html-type="submit"
-            size="large"
-            block
-            :loading="isLoading"
-          >
+          <a-button type="primary" html-type="submit" size="large" block :loading="isLoading">
             登錄
           </a-button>
         </a-form-item>
@@ -89,19 +69,12 @@ const fillDemoUser = (username: string, password: string) => {
 
       <div class="demo-users">
         <a-space direction="vertical" style="width: 100%">
-          <div
-            v-for="user in demoUsers"
-            :key="user.username"
-            class="demo-user-item"
-          >
+          <div v-for="user in demoUsers" :key="user.username" class="demo-user-item">
             <div class="demo-user-info">
               <strong>{{ user.role }}</strong>
               <span class="username">{{ user.username }}</span>
             </div>
-            <a-button
-              size="small"
-              @click="fillDemoUser(user.username, user.password)"
-            >
+            <a-button size="small" @click="fillDemoUser(user.username, user.password)">
               使用此帳號
             </a-button>
           </div>

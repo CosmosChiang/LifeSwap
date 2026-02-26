@@ -8,12 +8,38 @@ public sealed class SeedDataService
 {
     public static async Task SeedAsync(AppDbContext dbContext, IPasswordHashService passwordHashService)
     {
+        // Remove deprecated HR role and related assignments from existing databases.
+        var deprecatedHrRole = await dbContext.Roles.FirstOrDefaultAsync(role => role.Name == "HR");
+        if (deprecatedHrRole is not null)
+        {
+            var hrAssignments = await dbContext.UserRoles
+                .Where(userRole => userRole.RoleId == deprecatedHrRole.Id)
+                .ToListAsync();
+
+            if (hrAssignments.Count > 0)
+            {
+                dbContext.UserRoles.RemoveRange(hrAssignments);
+            }
+
+            dbContext.Roles.Remove(deprecatedHrRole);
+        }
+
+        var deprecatedHrUser = await dbContext.Users.FirstOrDefaultAsync(user => user.Username == "hr_admin");
+        if (deprecatedHrUser is not null)
+        {
+            dbContext.Users.Remove(deprecatedHrUser);
+        }
+
+        if (deprecatedHrRole is not null || deprecatedHrUser is not null)
+        {
+            await dbContext.SaveChangesAsync();
+        }
+
         // Ensure roles exist
         var roles = new[]
         {
             new Role { Name = "Employee", Description = "Regular employee" },
             new Role { Name = "Manager", Description = "Department manager" },
-            new Role { Name = "HR", Description = "Human Resources" },
             new Role { Name = "Administrator", Description = "System administrator" },
         };
 
@@ -50,21 +76,21 @@ public sealed class SeedDataService
             },
             new
             {
-                EmployeeId = "HR001",
-                Username = "hr_admin",
-                Email = "hr@lifeswap.local",
-                Department = "HR",
-                Role = "HR",
-                Password = "Password123!"
-            },
-            new
-            {
                 EmployeeId = "ADMIN001",
                 Username = "admin",
                 Email = "admin@lifeswap.local",
                 Department = "IT",
                 Role = "Administrator",
                 Password = "Password123!"
+            },
+            new
+            {
+                EmployeeId = "ROOT001",
+                Username = "root",
+                Email = "root@lifeswap.local",
+                Department = "IT",
+                Role = "Administrator",
+                Password = "RootPassword123!"
             },
         };
 

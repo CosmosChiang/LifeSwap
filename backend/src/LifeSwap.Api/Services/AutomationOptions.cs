@@ -14,5 +14,5 @@ public sealed class AutomationOptions
 
     public string ReminderRecipientEmployeeId { get; set; } = "MANAGER";
 
-    public string ReportRecipientEmployeeId { get; set; } = "HR";
+    public string ReportRecipientEmployeeId { get; set; } = "ADMIN001";
 }

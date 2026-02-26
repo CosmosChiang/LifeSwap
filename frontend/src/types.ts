@@ -1,6 +1,6 @@
 export type RequestType = 0 | 1
 
-export type RequestStatus = 0 | 1 | 2 | 3 | 4
+export type RequestStatus = 0 | 1 | 2 | 3 | 4 | 5
 
 export interface TimeOffRequest {
     id: string
@@ -39,7 +39,7 @@ export interface ReportSummary {
     startDate: string
     endDate: string
     requestType: RequestType | null
-    department: string | null
+    employeeId: string | null
     totalRequests: number
     submittedCount: number
     approvedCount: number
@@ -72,7 +72,7 @@ export interface ReportQuery {
     startDate: string
     endDate: string
     requestType?: RequestType
-    department?: string
+    employeeId?: string
     monthlyOvertimeHourLimit?: number
 }
 // Authentication types
@@ -96,4 +96,34 @@ export interface UserInfo {
     email: string
     departmentCode: string
     roles: string[]
+}
+
+export interface RoleItem {
+    id: string
+    name: string
+    description: string
+}
+
+export interface UserItem {
+    id: string
+    username: string
+    email: string
+    employeeId: string
+    departmentCode: string
+    isActive: boolean
+    roles: RoleItem[]
+}
+
+export interface CreateUserPayload {
+    username: string
+    email: string
+    employeeId: string
+    password: string
+    roleIds: string[]
+}
+
+export interface UpdateUserPayload {
+    email: string
+    isActive: boolean
+    roleIds: string[]
 }
