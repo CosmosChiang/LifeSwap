@@ -50,6 +50,7 @@ declare module 'vue' {
     ATextarea: typeof import('ant-design-vue/es')['Textarea']
     ATimePicker: typeof import('ant-design-vue/es')['TimePicker']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    LocaleSwitcher: typeof import('./src/components/common/LocaleSwitcher.vue')['default']
     RequestForm: typeof import('./src/components/feature/requests/RequestForm.vue')['default']
     RequestList: typeof import('./src/components/feature/requests/RequestList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

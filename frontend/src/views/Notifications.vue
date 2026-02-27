@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { fetchNotifications, markNotificationAsRead } from '../api'
 import type { NotificationItem } from '../types'
 
 const notifications = ref<NotificationItem[]>([])
 const loading = ref(false)
+const { t, locale } = useI18n()
 
 function formatTimestamp(value: string): string {
   const date = new Date(value)
@@ -15,11 +17,11 @@ function formatTimestamp(value: string): string {
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)
 
-  if (minutes < 1) return '剛剛'
-  if (minutes < 60) return `${minutes} 分鐘前`
-  if (hours < 24) return `${hours} 小時前`
-  if (days < 7) return `${days} 天前`
-  return date.toLocaleDateString('zh-TW')
+  if (minutes < 1) return t('notifications.time.justNow')
+  if (minutes < 60) return t('notifications.time.minutesAgo', { count: minutes })
+  if (hours < 24) return t('notifications.time.hoursAgo', { count: hours })
+  if (days < 7) return t('notifications.time.daysAgo', { count: days })
+  return date.toLocaleDateString(locale.value === 'zh-TW' ? 'zh-TW' : 'en-US')
 }
 
 async function loadNotifications() {
@@ -27,7 +29,7 @@ async function loadNotifications() {
   try {
     notifications.value = await fetchNotifications()
   } catch {
-    message.error('無法取得通知資料')
+    message.error(t('notifications.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -41,7 +43,7 @@ async function markAsRead(id: string) {
       target.isRead = true
     }
   } catch {
-    message.error('更新通知失敗')
+    message.error(t('notifications.updateFailed'))
   }
 }
 
@@ -55,10 +57,10 @@ onMounted(() => {
 <template>
   <div class="page-stack">
     <div class="page-header">
-      <h2 class="page-title">通知中心</h2>
+      <h2 class="page-title">{{ t('notifications.pageTitle') }}</h2>
     </div>
 
-    <a-card :title="`通知中心 (${unreadCount} 未讀)`" :loading="loading">
+    <a-card :title="t('notifications.cardTitle', { count: unreadCount })" :loading="loading">
       <a-list :data-source="notifications" :bordered="false">
         <template #renderItem="{ item }">
           <a-list-item
@@ -71,9 +73,9 @@ onMounted(() => {
                 size="small"
                 @click="markAsRead(item.id)"
               >
-                標記已讀
+                {{ t('notifications.markRead') }}
               </a-button>
-              <a-tag v-if="!item.isRead" color="blue">未讀</a-tag>
+              <a-tag v-if="!item.isRead" color="blue">{{ t('notifications.unread') }}</a-tag>
             </template>
 
             <a-list-item-meta>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
 import RequestForm from '../components/feature/requests/RequestForm.vue'
@@ -7,6 +8,7 @@ import RequestList from '../components/feature/requests/RequestList.vue'
 
 const requests = ref<TimeOffRequest[]>([])
 const loading = ref(false)
+const { t } = useI18n()
 
 async function loadRequests() {
   loading.value = true
@@ -31,14 +33,14 @@ onMounted(() => {
 <template>
   <div class="page-stack">
     <div class="page-header">
-      <h2 class="page-title">我的申請</h2>
+      <h2 class="page-title">{{ t('requests.pageTitle') }}</h2>
     </div>
 
-    <a-card title="建立申請">
+    <a-card :title="t('requests.createCard')">
       <RequestForm @success="handleFormSuccess" />
     </a-card>
 
-    <a-card title="我的申請" :loading="loading">
+    <a-card :title="t('requests.listCard')" :loading="loading">
       <RequestList :requests="requests" @refresh="loadRequests" />
     </a-card>
   </div>

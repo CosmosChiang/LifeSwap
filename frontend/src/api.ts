@@ -14,11 +14,16 @@ import type {
     UpdateUserPayload,
     UserItem,
 } from './types'
+import { i18n } from './i18n'
 
 const baseUrl = '/api/requests'
 const reportsBaseUrl = '/api/reports'
 const notificationsBaseUrl = '/api/notifications'
 const authBaseUrl = '/api/auth'
+
+function translate(key: string): string {
+    return i18n.global.t(key)
+}
 
 function getAuthToken(): string | null {
     return localStorage.getItem('auth_token')
@@ -40,7 +45,7 @@ function getAuthHeaders(): HeadersInit {
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
         const text = await response.text()
-        throw new Error(text || 'API request failed')
+        throw new Error(text || translate('api.errors.requestFailed'))
     }
 
     return (await response.json()) as T
@@ -71,7 +76,7 @@ export async function changeMyPassword(currentPassword: string, newPassword: str
 
     if (!response.ok) {
         const text = await response.text()
-        throw new Error(text || '密碼修改失敗')
+        throw new Error(text || translate('api.errors.changePasswordFailed'))
     }
 }
 
@@ -90,7 +95,7 @@ export async function deleteUser(userId: string): Promise<void> {
     })
 
     if (!response.ok) {
-        throw new Error('刪除失敗')
+        throw new Error(translate('api.errors.deleteFailed'))
     }
 }
 
@@ -123,7 +128,7 @@ export async function resetUserPassword(userId: string, newPassword: string): Pr
 
     if (!response.ok) {
         const text = await response.text()
-        throw new Error(text || '密碼重置失敗')
+        throw new Error(text || translate('api.errors.resetPasswordFailed'))
     }
 }
 
@@ -144,7 +149,7 @@ export async function assignUserRoles(userId: string, roleIds: string[]): Promis
 
     if (!response.ok) {
         const text = await response.text()
-        throw new Error(text || '更新角色失敗')
+        throw new Error(text || translate('api.errors.updateRoleFailed'))
     }
 }
 
@@ -283,6 +288,6 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
 
     if (!response.ok) {
         const text = await response.text()
-        throw new Error(text || '更新通知狀態失敗')
+        throw new Error(text || translate('api.errors.updateNotificationFailed'))
     }
 }

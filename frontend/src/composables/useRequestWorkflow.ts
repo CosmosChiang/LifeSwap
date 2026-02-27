@@ -6,6 +6,7 @@ import {
   returnRequest,
   submitRequest,
 } from '../api'
+import { i18n } from '../i18n'
 
 export function useRequestWorkflow() {
   const message = ref('')
@@ -19,7 +20,7 @@ export function useRequestWorkflow() {
 
     try {
       await submitRequest(requestId)
-      message.value = '申請已送審。'
+      message.value = i18n.global.t('workflow.submitSuccess')
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
@@ -43,7 +44,7 @@ export function useRequestWorkflow() {
         reviewerId,
         comment,
       })
-      message.value = '申請已核准。'
+      message.value = i18n.global.t('workflow.approveSuccess')
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
@@ -67,7 +68,7 @@ export function useRequestWorkflow() {
         reviewerId,
         comment,
       })
-      message.value = '申請已拒絕。'
+      message.value = i18n.global.t('workflow.rejectSuccess')
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
@@ -91,7 +92,7 @@ export function useRequestWorkflow() {
         reviewerId,
         comment,
       })
-      message.value = '申請已退回。'
+      message.value = i18n.global.t('workflow.returnSuccess')
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
@@ -108,7 +109,7 @@ export function useRequestWorkflow() {
 
     try {
       await cancelRequest(requestId)
-      message.value = '申請已取消。'
+      message.value = i18n.global.t('workflow.cancelSuccess')
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message

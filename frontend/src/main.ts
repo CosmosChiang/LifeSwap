@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import 'ant-design-vue/dist/reset.css'
 import './style.css'
 import App from './App.vue'
+import { i18n } from './i18n'
 
 const app = createApp(App)
 
@@ -116,5 +117,6 @@ router.beforeEach((to, _from, next) => {
 })
 
 app.use(router)
+app.use(i18n)
 app.mount('#app')
 

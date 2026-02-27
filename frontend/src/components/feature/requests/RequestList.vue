@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRequestWorkflow } from '../../../composables/useRequestWorkflow'
 import { getRequestTypeLabel, getRequestStatusLabel, getRequestStatusColor } from '../../../utils/enums'
 import type { TimeOffRequest, RequestType } from '../../../types'
@@ -13,32 +14,33 @@ const emit = defineEmits<{
 }>()
 
 const { handleSubmit, handleCancel } = useRequestWorkflow()
+const { t } = useI18n()
 
 const detailsModalVisible = ref(false)
 const selectedRequest = ref<TimeOffRequest | null>(null)
 
 const columns = [
   {
-    title: '員工',
+    title: t('requestList.columns.employeeId'),
     dataIndex: 'employeeId',
     key: 'employeeId',
     width: 100,
   },
   {
-    title: '類型',
+    title: t('requestList.columns.requestType'),
     dataIndex: 'requestType',
     key: 'requestType',
     width: 100,
     customRender: ({ text }: { text: RequestType }) => getRequestTypeLabel(text),
   },
   {
-    title: '日期',
+    title: t('requestList.columns.requestDate'),
     dataIndex: 'requestDate',
     key: 'requestDate',
     width: 120,
   },
   {
-    title: '狀態',
+    title: t('requestList.columns.status'),
     dataIndex: 'status',
     key: 'status',
     width: 100,
@@ -50,7 +52,7 @@ const columns = [
     }),
   },
   {
-    title: '操作',
+    title: t('requestList.columns.actions'),
     key: 'actions',
     width: 260,
   },
@@ -94,13 +96,13 @@ async function handleRowCancel(requestId: string) {
           <div class="actions-row">
             <a-button v-if="[0, 5].includes(record.status)" size="small" type="primary"
               @click="handleRowSubmit(record.id)">
-              送審
+              {{ t('requestList.actions.submit') }}
             </a-button>
             <a-button v-if="[0, 1, 5].includes(record.status)" size="small" @click="handleRowCancel(record.id)">
-              取消
+              {{ t('requestList.actions.cancel') }}
             </a-button>
             <a-button size="small" type="text" @click="openDetailsModal(record)">
-              詳情
+              {{ t('requestList.actions.details') }}
             </a-button>
           </div>
         </template>
@@ -108,28 +110,28 @@ async function handleRowCancel(requestId: string) {
     </a-table>
 
     <!-- Details Modal -->
-    <a-modal :open="detailsModalVisible" title="申請詳情" :footer="null" width="600px"
+    <a-modal :open="detailsModalVisible" :title="t('requestList.details.title')" :footer="null" width="600px"
       @update:open="detailsModalVisible = $event">
       <a-descriptions :column="1" v-if="selectedRequest" bordered>
-        <a-descriptions-item label="申請ID">
+        <a-descriptions-item :label="t('requestList.details.id')">
           {{ selectedRequest.id }}
         </a-descriptions-item>
-        <a-descriptions-item label="員工編號">
+        <a-descriptions-item :label="t('requestList.details.employeeId')">
           {{ selectedRequest.employeeId }}
         </a-descriptions-item>
-        <a-descriptions-item label="類型">
+        <a-descriptions-item :label="t('requestList.details.requestType')">
           {{ getRequestTypeLabel(selectedRequest.requestType) }}
         </a-descriptions-item>
-        <a-descriptions-item label="日期">
+        <a-descriptions-item :label="t('requestList.details.requestDate')">
           {{ selectedRequest.requestDate }}
         </a-descriptions-item>
-        <a-descriptions-item label="時間">
+        <a-descriptions-item :label="t('requestList.details.time')">
           {{ selectedRequest.startTime }} - {{ selectedRequest.endTime }}
         </a-descriptions-item>
-        <a-descriptions-item label="原因">
+        <a-descriptions-item :label="t('requestList.details.reason')">
           {{ selectedRequest.reason }}
         </a-descriptions-item>
-        <a-descriptions-item label="狀態">
+        <a-descriptions-item :label="t('requestList.details.status')">
           <a-tag :color="getRequestStatusColor(selectedRequest.status)">
             {{ getRequestStatusLabel(selectedRequest.status) }}
           </a-tag>

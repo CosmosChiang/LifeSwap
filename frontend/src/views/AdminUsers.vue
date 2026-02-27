@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { message, Modal } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { assignUserRoles, createUser, deleteUser, getRoles, getUsers, resetUserPassword, updateUser } from '../api'
 import type { CreateUserPayload, RoleItem, UpdateUserPayload, UserItem } from '../types'
+import { getRoleNameLabel } from '../utils/roles'
 
 const users = ref<UserItem[]>([])
 const roles = ref<RoleItem[]>([])
@@ -16,6 +18,7 @@ const submittingEdit = ref(false)
 const submittingResetPassword = ref(false)
 const editingUser = ref<UserItem | null>(null)
 const passwordTargetUser = ref<UserItem | null>(null)
+const { t } = useI18n()
 
 const createForm = reactive({
   username: '',
@@ -36,7 +39,9 @@ const resetPasswordForm = reactive({
   confirmPassword: '',
 })
 
-const roleOptions = computed(() => roles.value.map(role => ({ value: role.id, label: role.name })))
+const roleOptions = computed(() =>
+  roles.value.map(role => ({ value: role.id, label: getRoleNameLabel(role.name, t) })),
+)
 
 function firstRoleIdByName(roleName: string): string {
   const role = roles.value.find(item => item.name === roleName)
@@ -50,7 +55,7 @@ function roleIdOf(user: UserItem): string | undefined {
 
 function roleNameOf(user: UserItem): string {
   const firstRole = user.roles[0]
-  return firstRole ? firstRole.name : '未設定'
+  return firstRole ? getRoleNameLabel(firstRole.name, t) : t('adminUsers.roleNotSet')
 }
 
 function resetCreateForm() {
@@ -88,7 +93,7 @@ async function loadData() {
     users.value = userList
     roles.value = roleList
   } catch {
-    message.error('無法取得使用者或角色資料')
+    message.error(t('adminUsers.errors.loadDataFailed'))
   } finally {
     loading.value = false
   }
@@ -96,32 +101,32 @@ async function loadData() {
 
 function validateCreateForm(): boolean {
   if (!createForm.username.trim()) {
-    message.error('請輸入帳號')
+    message.error(t('adminUsers.validation.usernameRequired'))
     return false
   }
 
   if (!createForm.email.trim()) {
-    message.error('請輸入 Email')
+    message.error(t('adminUsers.validation.emailRequired'))
     return false
   }
 
   if (!createForm.employeeId.trim()) {
-    message.error('請輸入員工編號')
+    message.error(t('adminUsers.validation.employeeIdRequired'))
     return false
   }
 
   if (!createForm.password.trim()) {
-    message.error('請輸入密碼')
+    message.error(t('adminUsers.validation.passwordRequired'))
     return false
   }
 
   if (createForm.password.length < 8) {
-    message.error('密碼至少 8 碼')
+    message.error(t('adminUsers.validation.passwordMinLength'))
     return false
   }
 
   if (!createForm.roleId) {
-    message.error('請選擇角色')
+    message.error(t('adminUsers.validation.roleRequired'))
     return false
   }
 
@@ -145,10 +150,10 @@ async function handleCreateUser() {
 
     await createUser(payload)
     createModalVisible.value = false
-    message.success('帳號新增成功')
+    message.success(t('adminUsers.messages.createSuccess'))
     await loadData()
   } catch {
-    message.error('帳號新增失敗')
+    message.error(t('adminUsers.errors.createFailed'))
   } finally {
     submittingCreate.value = false
   }
@@ -160,12 +165,12 @@ async function handleUpdateUser() {
   }
 
   if (!editForm.email.trim()) {
-    message.error('請輸入 Email')
+    message.error(t('adminUsers.validation.emailRequired'))
     return
   }
 
   if (!editForm.roleId) {
-    message.error('請選擇角色')
+    message.error(t('adminUsers.validation.roleRequired'))
     return
   }
 
@@ -179,10 +184,10 @@ async function handleUpdateUser() {
 
     await updateUser(editingUser.value.id, payload)
     editModalVisible.value = false
-    message.success('帳號更新成功')
+    message.success(t('adminUsers.messages.updateSuccess'))
     await loadData()
   } catch {
-    message.error('帳號更新失敗')
+    message.error(t('adminUsers.errors.updateFailed'))
   } finally {
     submittingEdit.value = false
   }
@@ -194,17 +199,17 @@ async function handleResetPassword() {
   }
 
   if (!resetPasswordForm.newPassword || !resetPasswordForm.confirmPassword) {
-    message.error('請完整輸入新密碼欄位')
+    message.error(t('adminUsers.validation.newPasswordRequired'))
     return
   }
 
   if (resetPasswordForm.newPassword.length < 8) {
-    message.error('新密碼至少 8 碼')
+    message.error(t('adminUsers.validation.passwordMinLength'))
     return
   }
 
   if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
-    message.error('新密碼與確認密碼不一致')
+    message.error(t('adminUsers.validation.passwordMismatch'))
     return
   }
 
@@ -212,9 +217,9 @@ async function handleResetPassword() {
   try {
     await resetUserPassword(passwordTargetUser.value.id, resetPasswordForm.newPassword)
     resetPasswordModalVisible.value = false
-    message.success(`已重設 ${passwordTargetUser.value.username} 的密碼`)
+    message.success(t('adminUsers.messages.resetPasswordSuccess', { username: passwordTargetUser.value.username }))
   } catch {
-    message.error('密碼重設失敗')
+    message.error(t('adminUsers.errors.resetPasswordFailed'))
   } finally {
     submittingResetPassword.value = false
   }
@@ -222,14 +227,14 @@ async function handleResetPassword() {
 
 async function handleDelete(userId: string) {
   Modal.confirm({
-    title: '確定要刪除此帳號？',
+    title: t('adminUsers.confirmDeleteTitle'),
     onOk: async () => {
       try {
         await deleteUser(userId)
-        message.success('刪除成功')
+        message.success(t('adminUsers.messages.deleteSuccess'))
         await loadData()
       } catch {
-        message.error('刪除失敗')
+        message.error(t('adminUsers.errors.deleteFailed'))
       }
     },
   })
@@ -239,10 +244,10 @@ async function handleRoleChange(user: UserItem, roleId: string) {
   savingUserId.value = user.id
   try {
     await assignUserRoles(user.id, [roleId])
-    message.success(`已更新 ${user.username} 的角色`)
+    message.success(t('adminUsers.messages.roleUpdateSuccess', { username: user.username }))
     await loadData()
   } catch {
-    message.error('角色更新失敗')
+    message.error(t('adminUsers.errors.roleUpdateFailed'))
   } finally {
     savingUserId.value = null
   }
@@ -254,98 +259,98 @@ onMounted(loadData)
 <template>
   <div class="page-stack">
     <div class="page-header">
-      <h2 class="page-title">帳號管理</h2>
-      <a-button type="primary" @click="openCreateModal">新增帳號</a-button>
+      <h2 class="page-title">{{ t('adminUsers.pageTitle') }}</h2>
+      <a-button type="primary" @click="openCreateModal">{{ t('adminUsers.createUser') }}</a-button>
     </div>
 
     <a-table :data-source="users" :loading="loading" row-key="id" size="middle" :scroll="{ x: 1040 }">
-      <a-table-column title="帳號" data-index="username" key="username" :width="160" />
-      <a-table-column title="Email" data-index="email" key="email" :width="260" />
-      <a-table-column title="員工編號" data-index="employeeId" key="employeeId" :width="130" />
-      <a-table-column title="狀態" key="isActive" :width="100">
+      <a-table-column :title="t('adminUsers.columns.username')" data-index="username" key="username" :width="160" />
+      <a-table-column :title="t('adminUsers.columns.email')" data-index="email" key="email" :width="260" />
+      <a-table-column :title="t('adminUsers.columns.employeeId')" data-index="employeeId" key="employeeId" :width="130" />
+      <a-table-column :title="t('adminUsers.columns.status')" key="isActive" :width="100">
         <template #default="{ record }">
           <a-tag :color="record.isActive ? 'green' : 'red'">
-            {{ record.isActive ? '啟用' : '停用' }}
+            {{ record.isActive ? t('adminUsers.active') : t('adminUsers.inactive') }}
           </a-tag>
         </template>
       </a-table-column>
-      <a-table-column title="角色權限" key="roles" :width="220">
+      <a-table-column :title="t('adminUsers.columns.role')" key="roles" :width="220">
         <template #default="{ record }">
           <a-select :value="roleIdOf(record)" :options="roleOptions" :loading="savingUserId === record.id"
             style="width: 180px" @change="handleRoleChange(record, $event)" />
           <div class="role-note">
-            目前：{{ roleNameOf(record) }}
+            {{ t('adminUsers.currentRole') }}：{{ roleNameOf(record) }}
           </div>
         </template>
       </a-table-column>
-      <a-table-column title="操作" key="actions" :width="220">
+      <a-table-column :title="t('adminUsers.columns.actions')" key="actions" :width="220">
         <template #default="{ record }">
           <a-space>
-            <a-button type="link" @click="openEditModal(record)">編輯</a-button>
-            <a-button type="link" @click="openResetPasswordModal(record)">重設密碼</a-button>
-            <a-button type="link" danger @click="handleDelete(record.id)">刪除</a-button>
+            <a-button type="link" @click="openEditModal(record)">{{ t('common.edit') }}</a-button>
+            <a-button type="link" @click="openResetPasswordModal(record)">{{ t('adminUsers.resetPassword') }}</a-button>
+            <a-button type="link" danger @click="handleDelete(record.id)">{{ t('common.delete') }}</a-button>
           </a-space>
         </template>
       </a-table-column>
     </a-table>
 
-    <a-modal :open="createModalVisible" title="新增帳號" ok-text="建立" cancel-text="取消" :confirm-loading="submittingCreate"
+    <a-modal :open="createModalVisible" :title="t('adminUsers.createModal.title')" :ok-text="t('common.create')" :cancel-text="t('common.cancel')" :confirm-loading="submittingCreate"
       @ok="handleCreateUser" @update:open="createModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item label="帳號">
+        <a-form-item :label="t('adminUsers.columns.username')">
           <a-input :value="createForm.username" @update:value="createForm.username = $event" />
         </a-form-item>
-        <a-form-item label="Email">
+        <a-form-item :label="t('adminUsers.columns.email')">
           <a-input :value="createForm.email" @update:value="createForm.email = $event" />
         </a-form-item>
-        <a-form-item label="員工編號">
+        <a-form-item :label="t('adminUsers.columns.employeeId')">
           <a-input :value="createForm.employeeId" @update:value="createForm.employeeId = $event" />
         </a-form-item>
-        <a-form-item label="密碼">
+        <a-form-item :label="t('adminUsers.password')">
           <a-input-password :value="createForm.password" @update:value="createForm.password = $event" />
         </a-form-item>
-        <a-form-item label="角色">
+        <a-form-item :label="t('adminUsers.role')">
           <a-select :value="createForm.roleId" :options="roleOptions" @update:value="createForm.roleId = $event" />
         </a-form-item>
       </a-form>
     </a-modal>
 
-    <a-modal :open="editModalVisible" title="編輯帳號" ok-text="儲存" cancel-text="取消" :confirm-loading="submittingEdit"
+    <a-modal :open="editModalVisible" :title="t('adminUsers.editModal.title')" :ok-text="t('common.save')" :cancel-text="t('common.cancel')" :confirm-loading="submittingEdit"
       @ok="handleUpdateUser" @update:open="editModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item label="帳號">
+        <a-form-item :label="t('adminUsers.columns.username')">
           <a-input :value="editingUser?.username" disabled />
         </a-form-item>
-        <a-form-item label="員工編號">
+        <a-form-item :label="t('adminUsers.columns.employeeId')">
           <a-input :value="editingUser?.employeeId" disabled />
         </a-form-item>
-        <a-form-item label="Email">
+        <a-form-item :label="t('adminUsers.columns.email')">
           <a-input :value="editForm.email" @update:value="editForm.email = $event" />
         </a-form-item>
-        <a-form-item label="帳號狀態">
+        <a-form-item :label="t('adminUsers.accountStatus')">
           <a-select :value="editForm.isActive" @update:value="editForm.isActive = $event">
-            <a-select-option :value="true">啟用</a-select-option>
-            <a-select-option :value="false">停用</a-select-option>
+            <a-select-option :value="true">{{ t('adminUsers.active') }}</a-select-option>
+            <a-select-option :value="false">{{ t('adminUsers.inactive') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="角色">
+        <a-form-item :label="t('adminUsers.role')">
           <a-select :value="editForm.roleId" :options="roleOptions" @update:value="editForm.roleId = $event" />
         </a-form-item>
       </a-form>
     </a-modal>
 
-    <a-modal :open="resetPasswordModalVisible" title="重設密碼" ok-text="更新密碼" cancel-text="取消"
+    <a-modal :open="resetPasswordModalVisible" :title="t('adminUsers.resetPasswordModal.title')" :ok-text="t('adminUsers.resetPasswordModal.ok')" :cancel-text="t('common.cancel')"
       :confirm-loading="submittingResetPassword" @ok="handleResetPassword"
       @update:open="resetPasswordModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item label="目標帳號">
+        <a-form-item :label="t('adminUsers.resetPasswordModal.targetUser')">
           <a-input :value="passwordTargetUser?.username" disabled />
         </a-form-item>
-        <a-form-item label="新密碼">
+        <a-form-item :label="t('adminUsers.resetPasswordModal.newPassword')">
           <a-input-password :value="resetPasswordForm.newPassword"
             @update:value="resetPasswordForm.newPassword = $event" />
         </a-form-item>
-        <a-form-item label="確認新密碼">
+        <a-form-item :label="t('adminUsers.resetPasswordModal.confirmPassword')">
           <a-input-password :value="resetPasswordForm.confirmPassword"
             @update:value="resetPasswordForm.confirmPassword = $event" />
         </a-form-item>

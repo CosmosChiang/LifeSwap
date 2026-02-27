@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "dayjs": "^1.11.19",
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "vue-i18n": "^11.2.8"
   },
   "devDependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -29,5 +30,12 @@
     "vitest": "^4.0.18",
     "vue-router": "^4.6.4",
     "vue-tsc": "^3.1.5"
+  },
+  "overrides": {
+    "glob": "13.0.6",
+    "rollup": "4.59.0",
+    "editorconfig": {
+      "minimatch": "9.0.7"
+    }
   }
 }

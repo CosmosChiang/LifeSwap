@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
+import { getRoleNameLabel } from '../../utils/roles'
 import {
   HomeOutlined,
   FileTextOutlined,
@@ -16,69 +18,74 @@ import {
 const router = useRouter()
 const route = useRoute()
 const { currentUser, hasAnyRole, logout } = useAuth()
+const { t } = useI18n()
 
-const allMenuItems = [
+function roleLabel(roleName: string): string {
+  return getRoleNameLabel(roleName, t)
+}
+
+const allMenuItems = computed(() => [
     {
       key: '/admin/users',
-      label: '帳號管理',
+      label: t('nav.adminUsers'),
       icon: UserOutlined,
       route: '/admin/users',
       roles: ['Administrator'],
     },
     {
       key: '/admin/roles',
-      label: '角色管理',
+      label: t('nav.adminRoles'),
       icon: UserOutlined,
       route: '/admin/roles',
       roles: ['Administrator'],
     },
   {
     key: '/',
-    label: '首頁',
+    label: t('nav.home'),
     icon: HomeOutlined,
     route: '/',
     roles: [], // Empty means accessible to all authenticated users
   },
   {
     key: '/requests',
-    label: '我的申請',
+    label: t('nav.myRequests'),
     icon: FileTextOutlined,
     route: '/requests',
     roles: [],
   },
   {
     key: '/review',
-    label: '待審核',
+    label: t('nav.toReview'),
     icon: CheckSquareOutlined,
     route: '/review',
     roles: ['Manager', 'Administrator'],
   },
   {
     key: '/reports',
-    label: '報表與預警',
+    label: t('nav.reports'),
     icon: BarChartOutlined,
     route: '/reports',
     roles: ['Manager', 'Administrator'],
   },
   {
     key: '/notifications',
-    label: '通知',
+    label: t('nav.notifications'),
     icon: BellOutlined,
     route: '/notifications',
     roles: [],
   },
   {
     key: '/password',
-    label: '修改密碼',
+    label: t('nav.changePassword'),
     icon: LockOutlined,
     route: '/password',
     roles: [],
   },
-]
+])
 
 // Filter menu items based on user roles
 const menuItems = computed(() => {
-  return allMenuItems.filter(item => {
+  return allMenuItems.value.filter(item => {
     if (item.roles.length === 0) return true
     return hasAnyRole(...item.roles)
   })
@@ -122,7 +129,7 @@ function handleLogout() {
             size="small"
             color="blue"
           >
-            {{ role }}
+            {{ roleLabel(role) }}
           </a-tag>
         </div>
       </div>
@@ -149,7 +156,7 @@ function handleLogout() {
         <template #icon>
           <LogoutOutlined />
         </template>
-        登出
+        {{ t('app.logout') }}
       </a-button>
     </div>
   </div>

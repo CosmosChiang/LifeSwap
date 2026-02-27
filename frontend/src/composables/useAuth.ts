@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import type { LoginRequest, UserInfo } from '../types'
 import { login as apiLogin, logout as apiLogout } from '../api'
+import { i18n } from '../i18n'
 
 const userInfo = ref<UserInfo | null>(null)
 const isLoading = ref(false)
@@ -48,7 +49,7 @@ export function useAuth() {
 
             return response
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Login failed'
+            error.value = err instanceof Error ? err.message : i18n.global.t('auth.loginFailed')
             throw err
         } finally {
             isLoading.value = false

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import dayjs, { type Dayjs } from 'dayjs'
+import { useI18n } from 'vue-i18n'
 import { createRequest } from '../../../api'
 import type { CreateRequestPayload } from '../../../types'
 
@@ -33,12 +34,13 @@ const form = reactive<RequestFormModel>({
 
 const loading = ref(false)
 const errorMessage = ref('')
+const { t } = useI18n()
 
 async function handleSubmit() {
   errorMessage.value = ''
 
   if (!form.reason.trim()) {
-    errorMessage.value = '請輸入申請原因。'
+    errorMessage.value = t('requestForm.validation.reasonRequired')
     return
   }
 
@@ -81,22 +83,22 @@ function handleReset() {
     <a-form layout="vertical">
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="申請類型">
+          <a-form-item :label="t('requestForm.requestType')">
             <a-select :value="form.requestType" @update:value="form.requestType = $event">
-              <a-select-option :value="0">加班</a-select-option>
-              <a-select-option :value="1">補休</a-select-option>
+              <a-select-option :value="0">{{ t('requestType.overtime') }}</a-select-option>
+              <a-select-option :value="1">{{ t('requestType.compOff') }}</a-select-option>
             </a-select>
           </a-form-item>
         </a-col>
 
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="員工編號">
+          <a-form-item :label="t('requestForm.employeeId')">
             <a-input :value="form.employeeId" @update:value="form.employeeId = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="日期">
+          <a-form-item :label="t('requestForm.date')">
             <a-date-picker :value="form.requestDate" style="width: 100%" @update:value="form.requestDate = $event" />
           </a-form-item>
         </a-col>
@@ -104,31 +106,31 @@ function handleReset() {
 
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="開始時間">
+          <a-form-item :label="t('requestForm.startTime')">
             <a-time-picker :value="form.startTime" format="HH:mm" style="width: 100%"
               @update:value="form.startTime = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24" :sm="12" :md="6">
-          <a-form-item label="結束時間">
+          <a-form-item :label="t('requestForm.endTime')">
             <a-time-picker :value="form.endTime" format="HH:mm" style="width: 100%"
               @update:value="form.endTime = $event" />
           </a-form-item>
         </a-col>
 
         <a-col :xs="24">
-          <a-form-item label="申請原因">
-            <a-textarea :value="form.reason" placeholder="請輸入申請原因（必填）" :rows="4" @update:value="form.reason = $event" />
+          <a-form-item :label="t('requestForm.reason')">
+            <a-textarea :value="form.reason" :placeholder="t('requestForm.reasonPlaceholder')" :rows="4" @update:value="form.reason = $event" />
           </a-form-item>
         </a-col>
       </a-row>
 
       <a-form-item>
         <a-button type="primary" html-type="submit" :loading="loading" @click="handleSubmit">
-          建立草稿
+          {{ t('requestForm.createDraft') }}
         </a-button>
-        <a-button style="margin-left: 8px" @click="handleReset">重置</a-button>
+        <a-button style="margin-left: 8px" @click="handleReset">{{ t('common.reset') }}</a-button>
       </a-form-item>
     </a-form>
   </div>

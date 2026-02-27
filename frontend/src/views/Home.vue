@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { CheckCircleOutlined, CloseCircleOutlined, FileTextOutlined, HourglassOutlined } from '@ant-design/icons-vue'
+import { useI18n } from 'vue-i18n'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
 import { getRequestTypeLabel, getRequestStatusLabel } from '../utils/enums'
 
 const requests = ref<TimeOffRequest[]>([])
 const loading = ref(false)
+const { t } = useI18n()
 
 // Computed statistics
 const draftCount = computed(() => requests.value.filter(r => r.status === 0).length)
@@ -32,25 +34,25 @@ onMounted(() => {
 
 const columns = [
   {
-    title: '申請ID',
+    title: t('home.requestId'),
     dataIndex: 'id',
     key: 'id',
     width: 150,
   },
   {
-    title: '類型',
+    title: t('home.requestType'),
     dataIndex: 'requestType',
     key: 'requestType',
     width: 80,
   },
   {
-    title: '日期',
+    title: t('home.requestDate'),
     dataIndex: 'requestDate',
     key: 'requestDate',
     width: 100,
   },
   {
-    title: '狀態',
+    title: t('home.requestStatus'),
     dataIndex: 'status',
     key: 'status',
     width: 100,
@@ -61,14 +63,14 @@ const columns = [
 <template>
   <div class="page-stack">
     <div class="page-header">
-      <h2 class="page-title">首頁總覽</h2>
+      <h2 class="page-title">{{ t('home.title') }}</h2>
     </div>
 
     <a-row :gutter="[16, 16]">
       <a-col :xs="24" :sm="12" :md="6">
         <div class="stat-tile">
           <div class="stat-tile-head">
-            <span class="stat-tile-label">草稿</span>
+            <span class="stat-tile-label">{{ t('home.draft') }}</span>
             <span class="stat-tile-icon"><FileTextOutlined /></span>
           </div>
           <div class="stat-tile-value">{{ draftCount }}</div>
@@ -78,7 +80,7 @@ const columns = [
       <a-col :xs="24" :sm="12" :md="6">
         <div class="stat-tile">
           <div class="stat-tile-head">
-            <span class="stat-tile-label">審核中</span>
+            <span class="stat-tile-label">{{ t('home.submitted') }}</span>
             <span class="stat-tile-icon"><HourglassOutlined /></span>
           </div>
           <div class="stat-tile-value">{{ submittedCount }}</div>
@@ -88,7 +90,7 @@ const columns = [
       <a-col :xs="24" :sm="12" :md="6">
         <div class="stat-tile">
           <div class="stat-tile-head">
-            <span class="stat-tile-label">已核准</span>
+            <span class="stat-tile-label">{{ t('home.approved') }}</span>
             <span class="stat-tile-icon"><CheckCircleOutlined /></span>
           </div>
           <div class="stat-tile-value">{{ approvedCount }}</div>
@@ -98,7 +100,7 @@ const columns = [
       <a-col :xs="24" :sm="12" :md="6">
         <div class="stat-tile">
           <div class="stat-tile-head">
-            <span class="stat-tile-label">已拒絕</span>
+            <span class="stat-tile-label">{{ t('home.rejected') }}</span>
             <span class="stat-tile-icon"><CloseCircleOutlined /></span>
           </div>
           <div class="stat-tile-value">{{ rejectedCount }}</div>
@@ -107,7 +109,7 @@ const columns = [
     </a-row>
 
     <!-- Recent Requests Card -->
-    <a-card title="最近申請" :loading="loading">
+    <a-card :title="t('home.recentRequests')" :loading="loading">
       <a-table
         :columns="columns"
         :data-source="recentRequests"

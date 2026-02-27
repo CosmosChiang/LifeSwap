@@ -1,25 +1,26 @@
 import type { RequestType } from '../types'
+import { i18n } from '../i18n'
 
 export function getRequestTypeLabel(value: RequestType): string {
-  return value === 0 ? 'Overtime' : 'CompOff'
+  return value === 0 ? i18n.global.t('requestType.overtime') : i18n.global.t('requestType.compOff')
 }
 
 export function getRequestStatusLabel(value: number): string {
   switch (value) {
     case 0:
-      return 'Draft'
+      return i18n.global.t('requestStatus.draft')
     case 1:
-      return 'Submitted'
+      return i18n.global.t('requestStatus.submitted')
     case 2:
-      return 'Approved'
+      return i18n.global.t('requestStatus.approved')
     case 3:
-      return 'Rejected'
+      return i18n.global.t('requestStatus.rejected')
     case 4:
-      return 'Cancelled'
+      return i18n.global.t('requestStatus.cancelled')
     case 5:
-      return 'Returned'
+      return i18n.global.t('requestStatus.returned')
     default:
-      return 'Unknown'
+      return i18n.global.t('requestStatus.unknown')
   }
 }
 

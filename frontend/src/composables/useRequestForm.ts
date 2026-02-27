@@ -1,6 +1,7 @@
 import { reactive, ref } from 'vue'
 import { createRequest } from '../api'
 import type { CreateRequestPayload } from '../types'
+import { i18n } from '../i18n'
 
 export function useRequestForm() {
   const form = reactive<CreateRequestPayload>({
@@ -22,7 +23,7 @@ export function useRequestForm() {
     errorMessage.value = ''
 
     if (!form.reason.trim()) {
-      errorMessage.value = '請輸入申請原因。'
+      errorMessage.value = i18n.global.t('requestForm.validation.reasonRequired')
       return false
     }
 
@@ -32,7 +33,7 @@ export function useRequestForm() {
         ...form,
         reason: form.reason.trim(),
       })
-      message.value = '申請草稿已建立。'
+      message.value = i18n.global.t('requestForm.createDraft')
       form.reason = ''
       return true
     } catch (error) {

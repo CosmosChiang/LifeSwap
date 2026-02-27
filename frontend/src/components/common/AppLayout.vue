@@ -2,12 +2,14 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { LogoutOutlined } from '@ant-design/icons-vue'
 
 const collapsed = ref(false)
 const router = useRouter()
 const { logout } = useAuth()
+const { t } = useI18n()
 
 function handleBreakpoint(broken: boolean) {
   collapsed.value = broken
@@ -15,7 +17,7 @@ function handleBreakpoint(broken: boolean) {
 
 function handleLogout() {
   logout()
-  message.success('已登出')
+  message.success(t('app.logoutSuccess'))
   router.push({ name: 'Login' })
 }
 </script>
@@ -33,11 +35,14 @@ function handleLogout() {
     <a-layout class="app-main-layout">
       <a-layout-header class="app-header">
         <div class="app-header-inner">
-          <h3 class="app-header-title">員工加班/補休管理系統</h3>
-          <button type="button" class="app-logout-btn" @click="handleLogout">
-            <LogoutOutlined />
-            登出
-          </button>
+          <h3 class="app-header-title">{{ t('app.systemTitle') }}</h3>
+          <div class="app-header-actions">
+            <LocaleSwitcher />
+            <button type="button" class="app-logout-btn" @click="handleLogout">
+              <LogoutOutlined />
+              {{ t('app.logout') }}
+            </button>
+          </div>
         </div>
       </a-layout-header>
 
@@ -48,7 +53,7 @@ function handleLogout() {
       </a-layout-content>
 
       <a-layout-footer class="app-footer">
-        <p class="app-footer-text">LifeSwap © 2026 All Rights Reserved. Version 1.0.0</p>
+        <p class="app-footer-text">{{ t('app.footer', { version: '1.0.0' }) }}</p>
       </a-layout-footer>
     </a-layout>
   </a-layout>
@@ -97,6 +102,12 @@ function handleLogout() {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.app-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .app-header-title {
