@@ -4,6 +4,7 @@ import type {
     CreateUserPayload,
     LoginRequest,
     LoginResponse,
+    NotificationItem,
     ReportQuery,
     ReportSummary,
     ReviewPayload,
@@ -16,6 +17,7 @@ import type {
 
 const baseUrl = '/api/requests'
 const reportsBaseUrl = '/api/reports'
+const notificationsBaseUrl = '/api/notifications'
 const authBaseUrl = '/api/auth'
 
 function getAuthToken(): string | null {
@@ -226,6 +228,10 @@ function buildReportQueryString(query: ReportQuery): string {
         params.set('employeeId', query.employeeId.trim())
     }
 
+    if (query.departmentCode && query.departmentCode.trim()) {
+        params.set('departmentCode', query.departmentCode.trim())
+    }
+
     if (query.monthlyOvertimeHourLimit !== undefined) {
         params.set('monthlyOvertimeHourLimit', String(query.monthlyOvertimeHourLimit))
     }
@@ -258,4 +264,25 @@ export async function fetchComplianceWarnings(query: ReportQuery): Promise<Compl
     )
 
     return handleResponse<ComplianceWarning[]>(response)
+}
+
+export async function fetchNotifications(unreadOnly = false): Promise<NotificationItem[]> {
+    const queryString = unreadOnly ? '?unreadOnly=true' : ''
+    const response = await fetch(`${notificationsBaseUrl}${queryString}`, {
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<NotificationItem[]>(response)
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+    const response = await fetch(`${notificationsBaseUrl}/${notificationId}/read`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+        const text = await response.text()
+        throw new Error(text || '更新通知狀態失敗')
+    }
 }

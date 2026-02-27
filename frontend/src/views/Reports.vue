@@ -16,6 +16,7 @@ const reportFilters = reactive({
   endDate: dayjs() as Dayjs,
   requestType: '' as string | undefined,
   employeeId: '',
+  departmentCode: '',
   monthlyOvertimeHourLimit: 46,
 })
 
@@ -29,6 +30,7 @@ async function loadReports() {
       endDate: reportFilters.endDate?.format('YYYY-MM-DD'),
       requestType: reportFilters.requestType ? (Number(reportFilters.requestType) as 0 | 1) : undefined,
       employeeId: reportFilters.employeeId || undefined,
+      departmentCode: reportFilters.departmentCode || undefined,
       monthlyOvertimeHourLimit: reportFilters.monthlyOvertimeHourLimit,
     }
 
@@ -160,6 +162,12 @@ onMounted(() => {
               @update:value="reportFilters.employeeId = $event" />
           </a-form-item>
         </a-col>
+        <a-col :xs="24" :sm="12" :md="6">
+          <a-form-item label="部門代碼">
+            <a-input :value="reportFilters.departmentCode" placeholder="例如 ENG"
+              @update:value="reportFilters.departmentCode = $event" />
+          </a-form-item>
+        </a-col>
       </a-row>
       <a-row :gutter="16">
         <a-col :xs="24" :sm="12" :md="6">
@@ -221,7 +229,7 @@ onMounted(() => {
         row-key="key" :pagination="{ pageSize: 20 }" size="small" bordered>
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'severity'">
-            <a-tag :color="record.severity === 'HIGH' ? 'red' : record.severity === 'MEDIUM' ? 'orange' : 'blue'">
+            <a-tag :color="record.severity === 'Critical' ? 'red' : 'orange'">
               {{ record.severity }}
             </a-tag>
           </template>

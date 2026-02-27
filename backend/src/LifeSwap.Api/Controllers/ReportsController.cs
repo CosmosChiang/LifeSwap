@@ -21,10 +21,11 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? endDate,
         [FromQuery] RequestType? requestType,
         [FromQuery] string? employeeId,
+        [FromQuery] string? departmentCode,
         CancellationToken cancellationToken)
     {
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
-        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId)
+        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId, departmentCode)
             .ToListAsync(cancellationToken);
 
         var approvedOvertimeHours = requests
@@ -40,6 +41,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
             EndDate = rangeEnd,
             RequestType = requestType,
             EmployeeId = employeeId,
+            DepartmentCode = departmentCode,
             TotalRequests = totalRequests,
             SubmittedCount = requests.Count(request => request.Status == RequestStatus.Submitted),
             ApprovedCount = approvedCount,
@@ -61,10 +63,11 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? endDate,
         [FromQuery] RequestType? requestType,
         [FromQuery] string? employeeId,
+        [FromQuery] string? departmentCode,
         CancellationToken cancellationToken)
     {
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
-        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId)
+        var requests = await BuildFilteredQuery(rangeStart, rangeEnd, requestType, employeeId, departmentCode)
             .ToListAsync(cancellationToken);
 
         var trend = requests
@@ -95,6 +98,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         [FromQuery] DateOnly? endDate,
         [FromQuery] double monthlyOvertimeHourLimit = 46,
         [FromQuery] string? employeeId = null,
+        [FromQuery] string? departmentCode = null,
         CancellationToken cancellationToken = default)
     {
         if (monthlyOvertimeHourLimit <= 0)
@@ -104,7 +108,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
 
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
 
-        var approvedOvertimeRequests = await BuildFilteredQuery(rangeStart, rangeEnd, RequestType.Overtime, employeeId)
+        var approvedOvertimeRequests = await BuildFilteredQuery(rangeStart, rangeEnd, RequestType.Overtime, employeeId, departmentCode)
             .Where(request => request.Status == RequestStatus.Approved)
             .ToListAsync(cancellationToken);
 
@@ -159,7 +163,8 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         DateOnly startDate,
         DateOnly endDate,
         RequestType? requestType,
-        string? employeeId)
+        string? employeeId,
+        string? departmentCode)
     {
         var query = dbContext.TimeOffRequests
             .AsNoTracking()
@@ -174,6 +179,12 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         {
             var normalizedEmployeeId = employeeId.Trim();
             query = query.Where(request => request.EmployeeId == normalizedEmployeeId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(departmentCode))
+        {
+            var normalizedDepartmentCode = departmentCode.Trim();
+            query = query.Where(request => request.DepartmentCode.StartsWith(normalizedDepartmentCode));
         }
 
         return query;

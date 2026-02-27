@@ -12,6 +12,8 @@ public sealed class ReportSummaryDto
 
     public string? EmployeeId { get; init; }
 
+    public string? DepartmentCode { get; init; }
+
     public int TotalRequests { get; init; }
 
     public int SubmittedCount { get; init; }

@@ -1,39 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { message } from 'ant-design-vue'
+import { fetchNotifications, markNotificationAsRead } from '../api'
+import type { NotificationItem } from '../types'
 
-// Mock notifications data
-const notifications = ref([
-  {
-    id: '1',
-    title: '申請已核准',
-    message: '您的加班申請已被主管核准',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: '2',
-    title: '申請待審核',
-    message: '您有 1 個申請待主管審核',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: '3',
-    title: '法規預警',
-    message: '您本月加班時數已接近上限，請注意',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    read: true,
-  },
-  {
-    id: '4',
-    title: '系統通知',
-    message: '系統已於 2026-02-15 執行週期報表生成',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    read: true,
-  },
-])
+const notifications = ref<NotificationItem[]>([])
+const loading = ref(false)
 
-function formatTimestamp(date: Date): string {
+function formatTimestamp(value: string): string {
+  const date = new Date(value)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const minutes = Math.floor(diff / 60000)
@@ -47,45 +22,63 @@ function formatTimestamp(date: Date): string {
   return date.toLocaleDateString('zh-TW')
 }
 
-function markAsRead(id: string) {
-  const notification = notifications.value.find(n => n.id === id)
-  if (notification) {
-    notification.read = true
+async function loadNotifications() {
+  loading.value = true
+  try {
+    notifications.value = await fetchNotifications()
+  } catch {
+    message.error('無法取得通知資料')
+  } finally {
+    loading.value = false
   }
 }
 
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+async function markAsRead(id: string) {
+  try {
+    await markNotificationAsRead(id)
+    const target = notifications.value.find(item => item.id === id)
+    if (target) {
+      target.isRead = true
+    }
+  } catch {
+    message.error('更新通知失敗')
+  }
+}
 
-import { computed } from 'vue'
+const unreadCount = computed(() => notifications.value.filter(item => !item.isRead).length)
+
+onMounted(() => {
+  loadNotifications()
+})
 </script>
 
 <template>
   <div style="display: grid; gap: 24px">
-    <a-card :title="`通知中心 (${unreadCount} 未讀)`">
+    <a-card :title="`通知中心 (${unreadCount} 未讀)`" :loading="loading">
       <a-list :data-source="notifications" :bordered="false">
         <template #renderItem="{ item }">
           <a-list-item
             :style="{
-              backgroundColor: !item.read ? '#f5f5f5' : 'white',
+              backgroundColor: !item.isRead ? '#f5f5f5' : 'white',
               paddingLeft: '16px',
               paddingRight: '16px',
             }"
           >
             <template #actions>
               <a-button
-                v-if="!item.read"
+                v-if="!item.isRead"
                 type="text"
                 size="small"
                 @click="markAsRead(item.id)"
               >
                 標記已讀
               </a-button>
-              <a-tag v-if="!item.read" color="blue">未讀</a-tag>
+              <a-tag v-if="!item.isRead" color="blue">未讀</a-tag>
             </template>
 
             <a-list-item-meta>
               <template #title>
-                <span :style="{ fontWeight: !item.read ? 'bold' : 'normal' }">
+                <span :style="{ fontWeight: !item.isRead ? 'bold' : 'normal' }">
                   {{ item.title }}
                 </span>
               </template>
@@ -93,7 +86,7 @@ import { computed } from 'vue'
                 <div>
                   <p style="margin: 4px 0; color: #666">{{ item.message }}</p>
                   <span style="font-size: 12px; color: #999">
-                    {{ formatTimestamp(item.timestamp) }}
+                    {{ formatTimestamp(item.createdAt) }}
                   </span>
                 </div>
               </template>

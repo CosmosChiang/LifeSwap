@@ -40,6 +40,7 @@ export interface ReportSummary {
     endDate: string
     requestType: RequestType | null
     employeeId: string | null
+    departmentCode: string | null
     totalRequests: number
     submittedCount: number
     approvedCount: number
@@ -73,7 +74,17 @@ export interface ReportQuery {
     endDate: string
     requestType?: RequestType
     employeeId?: string
+    departmentCode?: string
     monthlyOvertimeHourLimit?: number
+}
+
+export interface NotificationItem {
+    id: string
+    recipientEmployeeId: string
+    title: string
+    message: string
+    isRead: boolean
+    createdAt: string
 }
 // Authentication types
 export interface LoginRequest {

@@ -55,6 +55,7 @@ public sealed class ReportsControllerTests
             new DateOnly(2026, 2, 28),
             null,
             null,
+            null,
             CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
@@ -105,6 +106,7 @@ public sealed class ReportsControllerTests
             new DateOnly(2026, 2, 28),
             null,
             "E101",
+            null,
             CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
@@ -172,6 +174,7 @@ public sealed class ReportsControllerTests
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 2, 28),
             8,
+            null,
             null,
             CancellationToken.None);
 
