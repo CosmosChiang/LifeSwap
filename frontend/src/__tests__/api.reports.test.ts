@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { describe, it } from 'vitest'
 import { fetchReportSummary, fetchComplianceWarnings } from '../api'
-import { mockFetchJsonOnce } from './helpers/fetchResponse'
-import { requireFirstFetchCall, toRequestUrl } from './helpers/fetchMock'
+import {
+    expectNoQueryParam,
+    expectQueryParam,
+    expectRequestPath,
+    mockFetchJsonOnce,
+    requireFirstFetchCall,
+    toRequestUrl,
+} from './helpers/httpTestHelpers'
 import { useAuthTokenLifecycle } from './helpers/lifecycle'
 import {
     baseReportQuery,
@@ -33,8 +39,9 @@ describe('fetchReportSummary', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toContain('startDate=2025-01-01')
-        expect(requestUrl).toContain('endDate=2025-01-31')
+        expectRequestPath(requestUrl, '/api/reports/summary')
+        expectQueryParam(requestUrl, 'startDate', '2025-01-01')
+        expectQueryParam(requestUrl, 'endDate', '2025-01-31')
     })
 
     it('includes departmentCode in query string when provided', async () => {
@@ -45,7 +52,7 @@ describe('fetchReportSummary', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toContain('departmentCode=ENG')
+        expectQueryParam(requestUrl, 'departmentCode', 'ENG')
     })
 
     it('omits departmentCode when empty string', async () => {
@@ -56,7 +63,7 @@ describe('fetchReportSummary', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).not.toContain('departmentCode')
+        expectNoQueryParam(requestUrl, 'departmentCode')
     })
 
     it('includes requestType when numeric value is provided', async () => {
@@ -67,7 +74,7 @@ describe('fetchReportSummary', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toContain('requestType=0')
+        expectQueryParam(requestUrl, 'requestType', '0')
     })
 })
 
@@ -83,7 +90,7 @@ describe('fetchComplianceWarnings', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toContain('/api/reports/compliance-warnings')
-        expect(requestUrl).toContain('departmentCode=EN')
+        expectRequestPath(requestUrl, '/api/reports/compliance-warnings')
+        expectQueryParam(requestUrl, 'departmentCode', 'EN')
     })
 })

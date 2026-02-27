@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { fetchNotifications, markNotificationAsRead } from '../api'
 import {
+    expectQueryParam,
+    expectRequestPath,
     mockFetchEmptyOnce,
     mockFetchJsonOnce,
     mockFetchTextOnce,
-} from './helpers/fetchResponse'
-import {
     requireFirstFetchCall,
     requireRequestInit,
     toRequestUrl,
-} from './helpers/fetchMock'
+} from './helpers/httpTestHelpers'
 import { createNotifications } from './helpers/notificationFixtures'
 import { useAuthTokenLifecycle } from './helpers/lifecycle'
 
@@ -38,7 +38,7 @@ describe('fetchNotifications', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toBe('/api/notifications')
+        expectRequestPath(requestUrl, '/api/notifications')
         expect(result).toHaveLength(2)
     })
 
@@ -50,7 +50,8 @@ describe('fetchNotifications', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toBe('/api/notifications?unreadOnly=true')
+        expectRequestPath(requestUrl, '/api/notifications')
+        expectQueryParam(requestUrl, 'unreadOnly', 'true')
         expect(result).toHaveLength(1)
     })
 
@@ -73,7 +74,7 @@ describe('markNotificationAsRead', () => {
         const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
         const [url, init] = firstCall
         const requestUrl = toRequestUrl(url)
-        expect(requestUrl).toBe('/api/notifications/n1/read')
+        expectRequestPath(requestUrl, '/api/notifications/n1/read')
         const requestInit = requireRequestInit(init)
         expect(requestInit.method).toBe('POST')
     })
