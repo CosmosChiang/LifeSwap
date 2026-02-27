@@ -91,7 +91,7 @@ async function handleRowCancel(requestId: string) {
         </template>
 
         <template v-if="column.key === 'actions'">
-          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <div class="actions-row">
             <a-button v-if="[0, 5].includes(record.status)" size="small" type="primary"
               @click="handleRowSubmit(record.id)">
               送審

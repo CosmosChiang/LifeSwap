@@ -46,8 +46,9 @@ async function handleSubmit() {
 </script>
 
 <template>
-    <a-card title="修改密碼" style="max-width: 520px">
-        <a-form layout="vertical" @submit.prevent="handleSubmit">
+    <div class="single-card-wrap">
+        <a-card title="修改密碼">
+            <a-form layout="vertical" @submit.prevent="handleSubmit">
             <a-form-item label="目前密碼">
                 <a-input-password :value="form.currentPassword" @update:value="form.currentPassword = $event" />
             </a-form-item>
@@ -64,6 +65,7 @@ async function handleSubmit() {
                 <a-button type="primary" :loading="submitting" @click="handleSubmit">儲存密碼</a-button>
                 <a-button @click="resetForm">清除</a-button>
             </a-space>
-        </a-form>
-    </a-card>
+            </a-form>
+        </a-card>
+    </div>
 </template>

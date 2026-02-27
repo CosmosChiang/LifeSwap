@@ -29,7 +29,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div style="display: grid; gap: 24px">
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">我的申請</h2>
+    </div>
+
     <a-card title="建立申請">
       <RequestForm @success="handleFormSuccess" />
     </a-card>

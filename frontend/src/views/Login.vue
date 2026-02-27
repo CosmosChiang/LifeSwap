@@ -90,14 +90,20 @@ const fillDemoUser = (username: string, password: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.45) 0%, rgba(99, 102, 241, 0) 35%),
+    radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0) 30%),
+    linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
   padding: 20px;
 }
 
 .login-card {
   width: 100%;
   max-width: 450px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.75);
+  border-radius: 18px;
+  box-shadow: 0 30px 60px -34px rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(2px);
 }
 
 .demo-users {
@@ -109,8 +115,9 @@ const fillDemoUser = (username: string, password: string) => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: #f5f5f5;
-  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   margin-bottom: 8px;
 }
 
@@ -122,7 +129,12 @@ const fillDemoUser = (username: string, password: string) => {
 
 .username {
   font-size: 12px;
-  color: #666;
+  color: #64748b;
   font-family: monospace;
+}
+
+:deep(.ant-card-head-title) {
+  text-align: center;
+  font-size: 20px;
 }
 </style>

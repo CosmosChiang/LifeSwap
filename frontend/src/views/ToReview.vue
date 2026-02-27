@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
 import { getRequestTypeLabel } from '../utils/enums'
@@ -114,15 +114,17 @@ async function handleReturnSubmit() {
   }
 }
 
-import { computed } from 'vue'
-
 onMounted(() => {
   loadRequests()
 })
 </script>
 
 <template>
-  <div style="display: grid; gap: 24px">
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">待審核</h2>
+    </div>
+
     <a-card :title="`待審核申請 (${submittedRequests.length})`" :loading="loading">
       <a-table :columns="columns" :data-source="submittedRequests" row-key="id" :pagination="{ pageSize: 10 }"
         size="small" bordered>
@@ -132,7 +134,7 @@ onMounted(() => {
           </template>
 
           <template v-if="column.key === 'actions'">
-            <div style="display: flex; gap: 8px">
+            <div class="actions-row">
               <a-button size="small" type="primary" @click="openApproveModal(record)">
                 核准
               </a-button>

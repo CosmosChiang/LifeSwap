@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
 import {
   HomeOutlined,
@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const { currentUser, hasAnyRole, logout } = useAuth()
 
 const allMenuItems = [
@@ -83,6 +84,8 @@ const menuItems = computed(() => {
   })
 })
 
+const selectedKeys = computed(() => [route.path])
+
 interface MenuInfo {
   key: string
 }
@@ -126,7 +129,7 @@ function handleLogout() {
     </div>
 
     <!-- Menu Items -->
-    <a-menu theme="dark" mode="inline" @click="handleMenuClick">
+    <a-menu theme="dark" mode="inline" :selected-keys="selectedKeys" @click="handleMenuClick">
       <a-menu-item v-for="item in menuItems" :key="item.key">
         <template #icon>
           <component :is="item.icon" />
@@ -161,22 +164,22 @@ function handleLogout() {
 
 .user-info {
   padding: 24px 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .user-avatar {
-  background-color: #1890ff;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   flex-shrink: 0;
 }
 
 .user-details {
   flex: 1;
   min-width: 0;
-  color: #fff;
+  color: #e2e8f0;
 }
 
 .user-name {
@@ -190,7 +193,7 @@ function handleLogout() {
 
 .user-employee-id {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(226, 232, 240, 0.7);
   margin-bottom: 8px;
 }
 
@@ -203,15 +206,24 @@ function handleLogout() {
 .logout-section {
   margin-top: auto;
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .logout-section .ant-btn {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(226, 232, 240, 0.9);
 }
 
 .logout-section .ant-btn:hover {
   color: #fff;
-  background: rgba(255, 77, 79, 0.1);
+  background: rgba(79, 70, 229, 0.25);
+}
+
+:deep(.ant-menu-dark) {
+  background: transparent;
+}
+
+:deep(.ant-menu-dark .ant-menu-item-selected) {
+  background: rgba(79, 70, 229, 0.35) !important;
+  border-right: 3px solid #818cf8;
 }
 </style>

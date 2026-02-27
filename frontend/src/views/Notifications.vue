@@ -53,16 +53,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div style="display: grid; gap: 24px">
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">通知中心</h2>
+    </div>
+
     <a-card :title="`通知中心 (${unreadCount} 未讀)`" :loading="loading">
       <a-list :data-source="notifications" :bordered="false">
         <template #renderItem="{ item }">
           <a-list-item
-            :style="{
-              backgroundColor: !item.isRead ? '#f5f5f5' : 'white',
-              paddingLeft: '16px',
-              paddingRight: '16px',
-            }"
+            :class="['notification-item', { 'notification-item--unread': !item.isRead }]"
           >
             <template #actions>
               <a-button
@@ -78,14 +78,14 @@ onMounted(() => {
 
             <a-list-item-meta>
               <template #title>
-                <span :style="{ fontWeight: !item.isRead ? 'bold' : 'normal' }">
+                <span :class="['notification-title', { 'notification-title--unread': !item.isRead }]">
                   {{ item.title }}
                 </span>
               </template>
               <template #description>
                 <div>
-                  <p style="margin: 4px 0; color: #666">{{ item.message }}</p>
-                  <span style="font-size: 12px; color: #999">
+                  <p class="notification-message">{{ item.message }}</p>
+                  <span class="notification-time">
                     {{ formatTimestamp(item.createdAt) }}
                   </span>
                 </div>
@@ -97,3 +97,34 @@ onMounted(() => {
     </a-card>
   </div>
 </template>
+
+<style scoped>
+.notification-item {
+  padding-left: 16px;
+  padding-right: 16px;
+  border-radius: 10px;
+}
+
+.notification-item--unread {
+  background: #eef2ff;
+}
+
+.notification-title {
+  color: #334155;
+}
+
+.notification-title--unread {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.notification-message {
+  margin: 4px 0;
+  color: #475569;
+}
+
+.notification-time {
+  font-size: 12px;
+  color: #94a3b8;
+}
+</style>

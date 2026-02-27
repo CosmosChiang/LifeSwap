@@ -252,9 +252,9 @@ onMounted(loadData)
 </script>
 
 <template>
-  <div style="display: grid; gap: 16px">
-    <div style="display: flex; justify-content: space-between; align-items: center">
-      <h2 style="margin: 0">帳號管理</h2>
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">帳號管理</h2>
       <a-button type="primary" @click="openCreateModal">新增帳號</a-button>
     </div>
 
@@ -273,7 +273,7 @@ onMounted(loadData)
         <template #default="{ record }">
           <a-select :value="roleIdOf(record)" :options="roleOptions" :loading="savingUserId === record.id"
             style="width: 180px" @change="handleRoleChange(record, $event)" />
-          <div style="font-size: 12px; color: #888; margin-top: 4px">
+          <div class="role-note">
             目前：{{ roleNameOf(record) }}
           </div>
         </template>
@@ -358,5 +358,11 @@ onMounted(loadData)
 :deep(.ant-table-thead > tr > th),
 :deep(.ant-table-tbody > tr > td) {
   white-space: nowrap;
+}
+
+.role-note {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
 }
 </style>

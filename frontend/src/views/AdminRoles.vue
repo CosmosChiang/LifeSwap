@@ -22,8 +22,8 @@ onMounted(fetchRoles)
 </script>
 
 <template>
-  <div>
-    <h2>角色管理</h2>
+  <div class="page-stack">
+    <h2 class="page-title">角色管理</h2>
     <a-table :dataSource="roles" :loading="loading" rowKey="id">
       <a-table-column title="角色名稱" dataIndex="name" key="name" />
       <a-table-column title="描述" dataIndex="description" key="description" />

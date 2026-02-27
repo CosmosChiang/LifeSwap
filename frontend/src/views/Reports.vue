@@ -130,7 +130,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div style="display: grid; gap: 24px">
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">報表與預警</h2>
+    </div>
+
     <!-- Filters -->
     <a-card title="篩選條件">
       <a-row :gutter="16">

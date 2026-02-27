@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
+import { CheckCircleOutlined, CloseCircleOutlined, FileTextOutlined, HourglassOutlined } from '@ant-design/icons-vue'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
 import { getRequestTypeLabel, getRequestStatusLabel } from '../utils/enums'
@@ -58,55 +59,50 @@ const columns = [
 </script>
 
 <template>
-  <div style="display: grid; gap: 24px">
-    <!-- Statistics Cards -->
+  <div class="page-stack">
+    <div class="page-header">
+      <h2 class="page-title">首頁總覽</h2>
+    </div>
+
     <a-row :gutter="[16, 16]">
       <a-col :xs="24" :sm="12" :md="6">
-        <a-statistic
-          title="草稿"
-          :value="draftCount"
-          value-style="{ color: '#1890ff' }"
-        >
-          <template #prefix>
-            <a-icon type="file-text" />
-          </template>
-        </a-statistic>
+        <div class="stat-tile">
+          <div class="stat-tile-head">
+            <span class="stat-tile-label">草稿</span>
+            <span class="stat-tile-icon"><FileTextOutlined /></span>
+          </div>
+          <div class="stat-tile-value">{{ draftCount }}</div>
+        </div>
       </a-col>
 
       <a-col :xs="24" :sm="12" :md="6">
-        <a-statistic
-          title="審核中"
-          :value="submittedCount"
-          value-style="{ color: '#faad14' }"
-        >
-          <template #prefix>
-            <a-icon type="clock-circle" />
-          </template>
-        </a-statistic>
+        <div class="stat-tile">
+          <div class="stat-tile-head">
+            <span class="stat-tile-label">審核中</span>
+            <span class="stat-tile-icon"><HourglassOutlined /></span>
+          </div>
+          <div class="stat-tile-value">{{ submittedCount }}</div>
+        </div>
       </a-col>
 
       <a-col :xs="24" :sm="12" :md="6">
-        <a-statistic
-          title="已核准"
-          :value="approvedCount"
-          value-style="{ color: '#52c41a' }"
-        >
-          <template #prefix>
-            <a-icon type="check-circle" />
-          </template>
-        </a-statistic>
+        <div class="stat-tile">
+          <div class="stat-tile-head">
+            <span class="stat-tile-label">已核准</span>
+            <span class="stat-tile-icon"><CheckCircleOutlined /></span>
+          </div>
+          <div class="stat-tile-value">{{ approvedCount }}</div>
+        </div>
       </a-col>
 
       <a-col :xs="24" :sm="12" :md="6">
-        <a-statistic
-          title="已拒絕"
-          :value="rejectedCount"
-          value-style="{ color: '#f5222d' }"
-        >
-          <template #prefix>
-            <a-icon type="close-circle" />
-          </template>
-        </a-statistic>
+        <div class="stat-tile">
+          <div class="stat-tile-head">
+            <span class="stat-tile-label">已拒絕</span>
+            <span class="stat-tile-icon"><CloseCircleOutlined /></span>
+          </div>
+          <div class="stat-tile-value">{{ rejectedCount }}</div>
+        </div>
       </a-col>
     </a-row>
 
@@ -115,17 +111,17 @@ const columns = [
       <a-table
         :columns="columns"
         :data-source="recentRequests"
-        :row-key="(record: TimeOffRequest) => record.id"
+        row-key="id"
         :pagination="false"
         size="small"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'requestType'">
-            {{ getRequestTypeLabel((record as TimeOffRequest).requestType) }}
+            {{ getRequestTypeLabel(record.requestType) }}
           </template>
           <template v-if="column.key === 'status'">
             <a-tag color="blue">
-              {{ getRequestStatusLabel((record as TimeOffRequest).status) }}
+              {{ getRequestStatusLabel(record.status) }}
             </a-tag>
           </template>
         </template>

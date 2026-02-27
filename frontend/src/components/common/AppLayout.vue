@@ -60,18 +60,22 @@ function handleLogout() {
 }
 
 .app-sider {
-  background: #001529;
+  background: linear-gradient(180deg, #172554 0%, #1e293b 100%);
+  box-shadow: 10px 0 35px -25px rgba(15, 23, 42, 0.8);
 }
 
 .app-brand {
-  padding: 16px;
+  padding: 20px 16px;
   text-align: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .app-brand-title {
-  color: #fff;
+  color: #e2e8f0;
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .app-main-layout {
@@ -79,9 +83,9 @@ function handleLogout() {
 }
 
 .app-header {
-  background: #fff;
-  padding: 0 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(90deg, #ffffff 0%, #f8faff 100%);
+  padding: 0 20px;
+  box-shadow: 0 8px 24px -20px rgba(15, 23, 42, 0.45);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -97,31 +101,34 @@ function handleLogout() {
 
 .app-header-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  color: #1e293b;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .app-logout-btn {
-  background: none;
-  border: none;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 10px;
+  transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .app-logout-btn:hover {
-  background: #f5f5f5;
+  background: #e0e7ff;
 }
 
 .app-content {
-  background: #f5f5f5;
+  background: transparent;
   padding: 20px;
 }
 
@@ -133,14 +140,14 @@ function handleLogout() {
 
 .app-footer {
   text-align: center;
-  background: #fff;
+  background: transparent;
   padding: 16px;
 }
 
 .app-footer-text {
   margin: 0;
   font-size: 12px;
-  color: #888;
+  color: #64748b;
 }
 
 @media (max-width: 768px) {
