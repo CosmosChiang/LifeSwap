@@ -52,3 +52,31 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# SQLite runtime files
+*.db
+*.db-wal
+*.db-shm
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Frontend build/test artifacts
+node_modules/
+dist/
+coverage/
+
+# IDE / OS local files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
