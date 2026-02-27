@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { fetchNotifications, markNotificationAsRead } from '../api'
-import type { NotificationItem } from '../types'
 import {
     mockFetchEmptyOnce,
     mockFetchJsonOnce,
@@ -11,26 +10,21 @@ import {
     requireRequestInit,
     toRequestUrl,
 } from './helpers/fetchMock'
+import { createNotifications } from './helpers/notificationFixtures'
 import { useAuthTokenLifecycle } from './helpers/lifecycle'
 
-const mockNotifications: NotificationItem[] = [
+const mockNotifications = createNotifications([
     {
-        id: 'n1',
-        recipientEmployeeId: 'E001',
         title: '您的申請已通過',
         message: '補休申請已獲批准',
         isRead: false,
-        createdAt: new Date().toISOString(),
     },
     {
-        id: 'n2',
-        recipientEmployeeId: 'E001',
         title: '通知 2',
         message: '訊息 2',
         isRead: true,
-        createdAt: new Date().toISOString(),
     },
-]
+])
 
 describe('fetchNotifications', () => {
     useAuthTokenLifecycle()

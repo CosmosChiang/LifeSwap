@@ -1,21 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { fetchReportSummary, fetchComplianceWarnings } from '../api'
-import type { ReportQuery, ReportSummary, ComplianceWarning } from '../types'
 import { mockFetchJsonOnce } from './helpers/fetchResponse'
 import { requireFirstFetchCall, toRequestUrl } from './helpers/fetchMock'
 import { useAuthTokenLifecycle } from './helpers/lifecycle'
+import {
+    baseReportQuery,
+    createComplianceWarnings,
+    createReportSummary,
+} from './helpers/reportFixtures'
 
-const baseQuery: ReportQuery = {
+const baseQuery = baseReportQuery
+const mockSummary = createReportSummary({
     startDate: '2025-01-01',
     endDate: '2025-01-31',
-}
-
-const mockSummary: ReportSummary = {
-    startDate: '2025-01-01',
-    endDate: '2025-01-31',
-    requestType: null,
-    employeeId: null,
-    departmentCode: null,
     totalRequests: 5,
     submittedCount: 5,
     approvedCount: 3,
@@ -23,7 +20,7 @@ const mockSummary: ReportSummary = {
     cancelledCount: 1,
     approvedOvertimeHours: 12,
     approvalRate: 0.6,
-}
+})
 
 describe('fetchReportSummary', () => {
     useAuthTokenLifecycle()
@@ -78,7 +75,7 @@ describe('fetchComplianceWarnings', () => {
     useAuthTokenLifecycle()
 
     it('calls compliance-warnings endpoint with departmentCode when provided', async () => {
-        const warnings: ComplianceWarning[] = []
+        const warnings = createComplianceWarnings()
         const fetchSpy = mockFetchJsonOnce(warnings)
 
         await fetchComplianceWarnings({ ...baseQuery, departmentCode: 'EN' })
