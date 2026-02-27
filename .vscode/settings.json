@@ -15,6 +15,14 @@
         "/^cd e:\\\\AIWorkspace\\\\LifeSwap ; dotnet test backend/tests/LifeSwap\\.Api\\.Tests/LifeSwap\\.Api\\.Tests\\.csproj --logger \"console;verbosity=minimal\" 2>&1$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd e:\\\\AIWorkspace\\\\LifeSwap\\\\frontend ; npm run test 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd e:\\\\AIWorkspace\\\\LifeSwap\\\\frontend ; npm run build 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

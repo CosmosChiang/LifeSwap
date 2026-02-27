@@ -1,6 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { fetchNotifications, markNotificationAsRead } from '../api'
 import type { NotificationItem } from '../types'
+import {
+    mockFetchEmptyOnce,
+    mockFetchJsonOnce,
+    mockFetchTextOnce,
+} from './helpers/fetchResponse'
+import {
+    requireFirstFetchCall,
+    requireRequestInit,
+    toRequestUrl,
+} from './helpers/fetchMock'
+import { useAuthTokenLifecycle } from './helpers/lifecycle'
 
 const mockNotifications: NotificationItem[] = [
     {
@@ -22,76 +33,59 @@ const mockNotifications: NotificationItem[] = [
 ]
 
 describe('fetchNotifications', () => {
-    beforeEach(() => {
-        localStorage.setItem('auth_token', 'test-token')
-    })
-
-    afterEach(() => {
-        localStorage.clear()
-        vi.restoreAllMocks()
-    })
+    useAuthTokenLifecycle()
 
     it('calls /api/notifications without query string when unreadOnly is false', async () => {
-        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-            new Response(JSON.stringify(mockNotifications), { status: 200 }),
-        )
+        const fetchSpy = mockFetchJsonOnce(mockNotifications)
 
         const result = await fetchNotifications(false)
 
-        expect(fetch).toHaveBeenCalledOnce()
-        const url = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
-        expect(url).toBe('/api/notifications')
+        expect(fetchSpy).toHaveBeenCalledOnce()
+        const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
+        const [url] = firstCall
+        const requestUrl = toRequestUrl(url)
+        expect(requestUrl).toBe('/api/notifications')
         expect(result).toHaveLength(2)
     })
 
     it('calls /api/notifications?unreadOnly=true when unreadOnly is true', async () => {
-        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-            new Response(JSON.stringify([mockNotifications[0]]), { status: 200 }),
-        )
+        const fetchSpy = mockFetchJsonOnce([mockNotifications[0]])
 
         const result = await fetchNotifications(true)
 
-        const url = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
-        expect(url).toBe('/api/notifications?unreadOnly=true')
+        const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
+        const [url] = firstCall
+        const requestUrl = toRequestUrl(url)
+        expect(requestUrl).toBe('/api/notifications?unreadOnly=true')
         expect(result).toHaveLength(1)
     })
 
     it('throws an error when the response is not ok', async () => {
-        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-            new Response('Unauthorized', { status: 401 }),
-        )
+        mockFetchTextOnce('Unauthorized', 401)
 
         await expect(fetchNotifications()).rejects.toThrow('Unauthorized')
     })
 })
 
 describe('markNotificationAsRead', () => {
-    beforeEach(() => {
-        localStorage.setItem('auth_token', 'test-token')
-    })
-
-    afterEach(() => {
-        localStorage.clear()
-        vi.restoreAllMocks()
-    })
+    useAuthTokenLifecycle()
 
     it('sends POST to /api/notifications/{id}/read', async () => {
-        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-            new Response(null, { status: 200 }),
-        )
+        const fetchSpy = mockFetchEmptyOnce()
 
         await markNotificationAsRead('n1')
 
-        expect(fetch).toHaveBeenCalledOnce()
-        const [url, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit]
-        expect(url).toBe('/api/notifications/n1/read')
-        expect(init.method).toBe('POST')
+        expect(fetchSpy).toHaveBeenCalledOnce()
+        const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
+        const [url, init] = firstCall
+        const requestUrl = toRequestUrl(url)
+        expect(requestUrl).toBe('/api/notifications/n1/read')
+        const requestInit = requireRequestInit(init)
+        expect(requestInit.method).toBe('POST')
     })
 
     it('throws when the response is not ok', async () => {
-        vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-            new Response('Not Found', { status: 404 }),
-        )
+        mockFetchTextOnce('Not Found', 404)
 
         await expect(markNotificationAsRead('n-missing')).rejects.toThrow()
     })

@@ -1,6 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import type { NotificationItem } from '../types'
+import { useMockLifecycle } from './helpers/lifecycle'
 
 // ---------------------------------------------------------------------------
 // Mock the api module before importing the component
@@ -57,13 +58,7 @@ const antStubs = {
 const mountOptions = { global: { stubs: antStubs } }
 
 describe('Notifications.vue', () => {
-    beforeEach(() => {
-        vi.clearAllMocks()
-    })
-
-    afterEach(() => {
-        vi.restoreAllMocks()
-    })
+    useMockLifecycle()
 
     it('calls fetchNotifications on mount', async () => {
         mockFetchNotifications.mockResolvedValue([])

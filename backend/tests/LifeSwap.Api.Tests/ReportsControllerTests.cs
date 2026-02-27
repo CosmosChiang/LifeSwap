@@ -1,4 +1,4 @@
-﻿using LifeSwap.Api.Controllers;
+using LifeSwap.Api.Controllers;
 using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
