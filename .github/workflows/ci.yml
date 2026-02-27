@@ -19,14 +19,14 @@ jobs:
               with:
                   dotnet-version: 10.0.x
 
-            - name: Restore backend API
-              run: dotnet restore backend/src/LifeSwap.Api/LifeSwap.Api.csproj
+            - name: Restore solution
+              run: dotnet restore LifeSwap.slnx
 
-            - name: Build backend API
-              run: dotnet build backend/src/LifeSwap.Api/LifeSwap.Api.csproj --configuration Release --no-restore
+            - name: Build solution
+              run: dotnet build LifeSwap.slnx --configuration Release --no-restore
 
             - name: Test backend
-              run: dotnet test backend/tests/LifeSwap.Api.Tests/LifeSwap.Api.Tests.csproj --configuration Release --no-build
+              run: dotnet test backend/tests/LifeSwap.Api.Tests/LifeSwap.Api.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal"
 
     frontend:
         runs-on: ubuntu-latest
