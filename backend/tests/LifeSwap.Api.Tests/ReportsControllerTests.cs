@@ -2,6 +2,7 @@ using LifeSwap.Api.Controllers;
 using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
