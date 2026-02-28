@@ -38,7 +38,7 @@ describe('Reports.vue', () => {
         expect(mockFetchComplianceWarnings).toHaveBeenCalledOnce()
 
         const cardTitles = wrapper.findAll('.a-card').map(card => card.attributes('data-title'))
-        expect(cardTitles).toContain('摘要統計')
+        expect(cardTitles).toContain('加班申請摘要')
     })
 
     it('shows error alert when report loading fails', async () => {
