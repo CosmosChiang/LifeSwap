@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { CheckCircleOutlined, CloseCircleOutlined, FileTextOutlined, HourglassOutlined } from '@ant-design/icons-vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { fetchRequests } from '../api'
+import { useAuth } from '../composables/useAuth'
 import type { TimeOffRequest } from '../types'
 import { getRequestTypeLabel, getRequestStatusLabel } from '../utils/enums'
 
 const requests = ref<TimeOffRequest[]>([])
 const loading = ref(false)
 const { t } = useI18n()
+const router = useRouter()
+const { hasRole } = useAuth()
 
 // Computed statistics
 const draftCount = computed(() => requests.value.filter(r => r.status === 0).length)
@@ -16,6 +20,7 @@ const submittedCount = computed(() => requests.value.filter(r => r.status === 1)
 const approvedCount = computed(() => requests.value.filter(r => r.status === 2).length)
 const rejectedCount = computed(() => requests.value.filter(r => r.status === 3).length)
 const recentRequests = computed(() => requests.value.slice(0, 5))
+const isAdministrator = computed(() => hasRole('Administrator'))
 
 async function loadRequests() {
   loading.value = true
@@ -31,6 +36,10 @@ async function loadRequests() {
 onMounted(() => {
   loadRequests()
 })
+
+function goToAutomation() {
+  router.push('/admin/automation')
+}
 
 const columns = [
   {
@@ -107,6 +116,14 @@ const columns = [
         </div>
       </a-col>
     </a-row>
+
+    <a-card :title="t('home.quickActionsTitle')">
+      <a-space>
+        <a-button v-if="isAdministrator" type="primary" @click="goToAutomation">
+          {{ t('home.goToAutomation') }}
+        </a-button>
+      </a-space>
+    </a-card>
 
     <!-- Recent Requests Card -->
     <a-card :title="t('home.recentRequests')" :loading="loading">

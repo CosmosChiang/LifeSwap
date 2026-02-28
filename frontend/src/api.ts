@@ -11,6 +11,7 @@ import type {
     RoleItem,
     TrendPoint,
     TimeOffRequest,
+    AutomationStatusResponse,
     UpdateUserPayload,
     UserItem,
 } from './types'
@@ -20,6 +21,7 @@ const baseUrl = '/api/requests'
 const reportsBaseUrl = '/api/reports'
 const notificationsBaseUrl = '/api/notifications'
 const authBaseUrl = '/api/auth'
+const automationBaseUrl = '/api/automation'
 
 function translate(key: string): string {
     return i18n.global.t(key)
@@ -44,11 +46,31 @@ function getAuthHeaders(): HeadersInit {
 
 async function handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || translate('api.errors.requestFailed'))
+        throw new Error(await extractErrorMessage(response, translate('api.errors.requestFailed')))
     }
 
     return (await response.json()) as T
+}
+
+async function extractErrorMessage(response: Response, fallback: string): Promise<string> {
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('json')) {
+        try {
+            const payload = (await response.json()) as {
+                detail?: string
+                title?: string
+                message?: string
+            }
+
+            return payload.detail || payload.title || payload.message || fallback
+        } catch {
+            return fallback
+        }
+    }
+
+    const text = await response.text()
+    return text || fallback
 }
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
@@ -75,8 +97,7 @@ export async function changeMyPassword(currentPassword: string, newPassword: str
     })
 
     if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || translate('api.errors.changePasswordFailed'))
+        throw new Error(await extractErrorMessage(response, translate('api.errors.changePasswordFailed')))
     }
 }
 
@@ -127,8 +148,7 @@ export async function resetUserPassword(userId: string, newPassword: string): Pr
     })
 
     if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || translate('api.errors.resetPasswordFailed'))
+        throw new Error(await extractErrorMessage(response, translate('api.errors.resetPasswordFailed')))
     }
 }
 
@@ -148,8 +168,7 @@ export async function assignUserRoles(userId: string, roleIds: string[]): Promis
     })
 
     if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || translate('api.errors.updateRoleFailed'))
+        throw new Error(await extractErrorMessage(response, translate('api.errors.updateRoleFailed')))
     }
 }
 
@@ -287,7 +306,48 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
     })
 
     if (!response.ok) {
-        const text = await response.text()
-        throw new Error(text || translate('api.errors.updateNotificationFailed'))
+        throw new Error(await extractErrorMessage(response, translate('api.errors.updateNotificationFailed')))
+    }
+}
+
+export async function fetchAutomationStatus(): Promise<AutomationStatusResponse> {
+    const response = await fetch(`${automationBaseUrl}/status`, {
+        headers: getAuthHeaders(),
+    })
+
+    return handleResponse<AutomationStatusResponse>(response)
+}
+
+export async function runAutomationReminder(): Promise<void> {
+    const response = await fetch(`${automationBaseUrl}/run-reminder`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+        throw new Error(await extractErrorMessage(response, translate('api.errors.runAutomationFailed')))
+    }
+}
+
+export async function runAutomationReport(): Promise<void> {
+    const response = await fetch(`${automationBaseUrl}/run-report`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+        throw new Error(await extractErrorMessage(response, translate('api.errors.runAutomationFailed')))
+    }
+}
+
+export async function updateAutomationSchedulerState(enabled: boolean): Promise<void> {
+    const response = await fetch(`${automationBaseUrl}/scheduler-state`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ enabled }),
+    })
+
+    if (!response.ok) {
+        throw new Error(await extractErrorMessage(response, translate('api.errors.runAutomationFailed')))
     }
 }

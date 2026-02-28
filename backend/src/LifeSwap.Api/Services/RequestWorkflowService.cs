@@ -41,6 +41,6 @@ public sealed class RequestWorkflowService : IRequestWorkflowService
     /// </summary>
     public bool CanCancel(TimeOffRequest request)
     {
-        return request.Status is RequestStatus.Draft or RequestStatus.Submitted or RequestStatus.Returned;
+        return request.Status is RequestStatus.Draft or RequestStatus.Submitted;
     }
 }

@@ -8,7 +8,6 @@ import { useRequestWorkflow } from '../composables/useRequestWorkflow'
 
 const allRequests = ref<TimeOffRequest[]>([])
 const loading = ref(false)
-const reviewerId = ref('M001')
 const reviewComment = ref('')
 const approveModalVisible = ref(false)
 const rejectModalVisible = ref(false)
@@ -112,7 +111,7 @@ function openReturnModal(request: TimeOffRequest) {
 
 async function handleApproveSubmit() {
   if (!selectedRequest.value) return
-  const success = await handleApprove(selectedRequest.value.id, reviewerId.value, reviewComment.value)
+  const success = await handleApprove(selectedRequest.value.id, reviewComment.value)
   if (success) {
     approveModalVisible.value = false
     reviewComment.value = ''
@@ -122,7 +121,7 @@ async function handleApproveSubmit() {
 
 async function handleRejectSubmit() {
   if (!selectedRequest.value) return
-  const success = await handleReject(selectedRequest.value.id, reviewerId.value, reviewComment.value)
+  const success = await handleReject(selectedRequest.value.id, reviewComment.value)
   if (success) {
     rejectModalVisible.value = false
     reviewComment.value = ''
@@ -132,7 +131,7 @@ async function handleRejectSubmit() {
 
 async function handleReturnSubmit() {
   if (!selectedRequest.value) return
-  const success = await handleReturn(selectedRequest.value.id, reviewerId.value, reviewComment.value)
+  const success = await handleReturn(selectedRequest.value.id, reviewComment.value)
   if (success) {
     returnModalVisible.value = false
     reviewComment.value = ''
@@ -186,9 +185,6 @@ onMounted(() => {
     <a-modal :open="approveModalVisible" :title="t('review.modals.approve.title')" :ok-text="t('review.modals.approve.ok')" :cancel-text="t('common.cancel')" @ok="handleApproveSubmit"
       @update:open="approveModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item :label="t('review.modals.reviewerId')">
-          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
-        </a-form-item>
         <a-form-item :label="t('review.modals.comment')">
           <a-textarea :value="reviewComment" :rows="4" @update:value="reviewComment = $event" />
         </a-form-item>
@@ -199,9 +195,6 @@ onMounted(() => {
     <a-modal :open="rejectModalVisible" :title="t('review.modals.reject.title')" :ok-text="t('review.modals.reject.ok')" :cancel-text="t('common.cancel')" ok-button-danger
       @ok="handleRejectSubmit" @update:open="rejectModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item :label="t('review.modals.reviewerId')">
-          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
-        </a-form-item>
         <a-form-item :label="t('review.modals.reject.reason')">
           <a-textarea :value="reviewComment" :rows="4" :placeholder="t('review.modals.reject.placeholder')" @update:value="reviewComment = $event" />
         </a-form-item>
@@ -212,9 +205,6 @@ onMounted(() => {
     <a-modal :open="returnModalVisible" :title="t('review.modals.return.title')" :ok-text="t('review.modals.return.ok')" :cancel-text="t('common.cancel')" @ok="handleReturnSubmit"
       @update:open="returnModalVisible = $event">
       <a-form layout="vertical">
-        <a-form-item :label="t('review.modals.reviewerId')">
-          <a-input :value="reviewerId" @update:value="reviewerId = $event" />
-        </a-form-item>
         <a-form-item :label="t('review.modals.return.reason')">
           <a-textarea :value="reviewComment" :rows="4" :placeholder="t('review.modals.return.placeholder')"
             @update:value="reviewComment = $event" />

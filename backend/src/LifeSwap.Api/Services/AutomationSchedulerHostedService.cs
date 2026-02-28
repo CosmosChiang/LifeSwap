@@ -3,7 +3,8 @@ using Microsoft.Extensions.Options;
 namespace LifeSwap.Api.Services;
 
 public sealed class AutomationSchedulerHostedService(
-    IServiceScopeFactory serviceScopeFactory,
+    IAutomationExecutionService executionService,
+    IAutomationSchedulerStateService schedulerState,
     IOptions<AutomationOptions> options,
     ILogger<AutomationSchedulerHostedService> logger) : BackgroundService
 {
@@ -12,11 +13,7 @@ public sealed class AutomationSchedulerHostedService(
     /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!options.Value.Enabled)
-        {
-            logger.LogInformation("Automation scheduler is disabled by configuration.");
-            return;
-        }
+        logger.LogInformation("Automation scheduler started. InitialEnabled={Enabled}", schedulerState.IsEnabled);
 
         var reminderTask = RunReminderLoopAsync(stoppingToken);
         var reportTask = RunReportLoopAsync(stoppingToken);
@@ -29,12 +26,18 @@ public sealed class AutomationSchedulerHostedService(
     /// </summary>
     private async Task RunReminderLoopAsync(CancellationToken stoppingToken)
     {
-        await RunWithScopeAsync(service => service.RunReminderOnceAsync(stoppingToken), stoppingToken);
+        await RunWorkflowIfEnabledAsync(
+            operation: cancellationToken => executionService.RunReminderAsync("Scheduler", cancellationToken),
+            workflowName: "Reminder",
+            cancellationToken: stoppingToken);
 
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(Math.Max(options.Value.ReminderIntervalMinutes, 1)));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            await RunWithScopeAsync(service => service.RunReminderOnceAsync(stoppingToken), stoppingToken);
+            await RunWorkflowIfEnabledAsync(
+                operation: cancellationToken => executionService.RunReminderAsync("Scheduler", cancellationToken),
+                workflowName: "Reminder",
+                cancellationToken: stoppingToken);
         }
     }
 
@@ -43,27 +46,38 @@ public sealed class AutomationSchedulerHostedService(
     /// </summary>
     private async Task RunReportLoopAsync(CancellationToken stoppingToken)
     {
-        await RunWithScopeAsync(service => service.RunPeriodicReportOnceAsync(stoppingToken), stoppingToken);
+        await RunWorkflowIfEnabledAsync(
+            operation: cancellationToken => executionService.RunReportAsync("Scheduler", cancellationToken),
+            workflowName: "PeriodicReport",
+            cancellationToken: stoppingToken);
 
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(Math.Max(options.Value.ReportIntervalMinutes, 1)));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            await RunWithScopeAsync(service => service.RunPeriodicReportOnceAsync(stoppingToken), stoppingToken);
+            await RunWorkflowIfEnabledAsync(
+                operation: cancellationToken => executionService.RunReportAsync("Scheduler", cancellationToken),
+                workflowName: "PeriodicReport",
+                cancellationToken: stoppingToken);
         }
     }
 
     /// <summary>
     /// Runs a workflow operation in a DI scope with exception handling.
     /// </summary>
-    private async Task RunWithScopeAsync(
-        Func<IAutomationWorkflowService, Task> operation,
+    private async Task RunWorkflowIfEnabledAsync(
+        Func<CancellationToken, Task> operation,
+        string workflowName,
         CancellationToken cancellationToken)
     {
+        if (!schedulerState.IsEnabled)
+        {
+            logger.LogDebug("Automation workflow skipped because scheduler is disabled. Workflow={WorkflowName}", workflowName);
+            return;
+        }
+
         try
         {
-            using var scope = serviceScopeFactory.CreateScope();
-            var service = scope.ServiceProvider.GetRequiredService<IAutomationWorkflowService>();
-            await operation(service);
+            await operation(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

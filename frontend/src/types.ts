@@ -37,7 +37,6 @@ export interface CreateRequestPayload {
 }
 
 export interface ReviewPayload {
-    reviewerId: string
     comment: string
 }
 
@@ -143,4 +142,22 @@ export interface UpdateUserPayload {
     email: string
     isActive: boolean
     roleIds: string[]
+}
+
+export interface AutomationWorkflowStatus {
+    name: string
+    lastStartedAt: string | null
+    lastCompletedAt: string | null
+    lastSucceeded: boolean
+    lastAttemptCount: number
+    consecutiveFailures: number
+    lastError: string | null
+}
+
+export interface AutomationStatusResponse {
+    schedulerEnabled: boolean
+    reminderIntervalMinutes: number
+    reportIntervalMinutes: number
+    maxRetryCount: number
+    workflows: AutomationWorkflowStatus[]
 }

@@ -13,6 +13,7 @@ import {
   LogoutOutlined,
   LockOutlined,
   UserOutlined,
+  SyncOutlined,
 } from '@ant-design/icons-vue'
 
 const router = useRouter()
@@ -37,6 +38,13 @@ const allMenuItems = computed(() => [
       label: t('nav.adminRoles'),
       icon: UserOutlined,
       route: '/admin/roles',
+      roles: ['Administrator'],
+    },
+    {
+      key: '/admin/automation',
+      label: t('nav.adminAutomation'),
+      icon: SyncOutlined,
+      route: '/admin/automation',
       roles: ['Administrator'],
     },
   {

@@ -52,6 +52,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.AddScoped<IRequestWorkflowService, RequestWorkflowService>();
 builder.Services.AddScoped<IAutomationWorkflowService, AutomationWorkflowService>();
+builder.Services.AddSingleton<IAutomationExecutionStatusStore, AutomationExecutionStatusStore>();
+builder.Services.AddSingleton<IAutomationSchedulerStateService, AutomationSchedulerStateService>();
+builder.Services.AddScoped<IAutomationExecutionService, AutomationExecutionService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
 builder.Services.Configure<TeamsNotificationOptions>(

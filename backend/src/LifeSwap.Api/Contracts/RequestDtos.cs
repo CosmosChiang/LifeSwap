@@ -11,5 +11,4 @@ public sealed record CreateRequestDto(
     string OvertimeReason);
 
 public sealed record ReviewRequestDto(
-    string ReviewerId,
     string? Comment);

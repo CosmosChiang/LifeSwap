@@ -15,7 +15,8 @@ namespace LifeSwap.Api.Controllers;
 public sealed class RequestsController(
     AppDbContext dbContext,
     IRequestWorkflowService workflowService,
-    ITeamsNotificationService teamsNotificationService) : ControllerBase
+    ITeamsNotificationService teamsNotificationService,
+    ILogger<RequestsController> logger) : ControllerBase
 {
     /// <summary>
     /// Gets all requests with optional employee and status filtering.
@@ -84,6 +85,11 @@ public sealed class RequestsController(
             return NotFound();
         }
 
+        if (!CanAccessRequest(request))
+        {
+            return Forbid();
+        }
+
         return Ok(request);
     }
 
@@ -95,20 +101,40 @@ public sealed class RequestsController(
         [FromBody] CreateRequestDto input,
         CancellationToken cancellationToken)
     {
+        var actorEmployeeId = ResolveActorEmployeeId();
+        if (string.IsNullOrWhiteSpace(actorEmployeeId))
+        {
+            return Forbid();
+        }
+
         if (string.IsNullOrWhiteSpace(input.EmployeeId) ||
             string.IsNullOrWhiteSpace(input.OvertimeProject) ||
             string.IsNullOrWhiteSpace(input.OvertimeContent) ||
             string.IsNullOrWhiteSpace(input.OvertimeReason))
         {
-            return BadRequest("EmployeeId, OvertimeProject, OvertimeContent, and OvertimeReason are required.");
+            return this.CreateValidationProblemResponse(
+                "Invalid request payload.",
+                "EmployeeId, OvertimeProject, OvertimeContent, and OvertimeReason are required.");
         }
 
         if (input.OvertimeEndAt <= input.OvertimeStartAt)
         {
-            return BadRequest("OvertimeEndAt must be later than OvertimeStartAt.");
+            return this.CreateValidationProblemResponse(
+                "Invalid overtime time range.",
+                "OvertimeEndAt must be later than OvertimeStartAt.");
         }
 
-        var normalizedEmployeeId = input.EmployeeId.Trim();
+        var inputEmployeeId = input.EmployeeId.Trim();
+        var normalizedEmployeeId = HasElevatedRequestAccess()
+            ? inputEmployeeId
+            : actorEmployeeId;
+
+        if (!HasElevatedRequestAccess() &&
+            !string.Equals(inputEmployeeId, actorEmployeeId, StringComparison.OrdinalIgnoreCase))
+        {
+            return Forbid();
+        }
+
         var applicant = await dbContext.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(user => user.EmployeeId == normalizedEmployeeId, cancellationToken);
@@ -119,7 +145,9 @@ public sealed class RequestsController(
 
         if (calculatedCompHours <= 0)
         {
-            return BadRequest("Calculated comp time hours must be greater than zero.");
+            return this.CreateValidationProblemResponse(
+                "Invalid comp time calculation.",
+                "Calculated comp time hours must be greater than zero.");
         }
 
         var request = new TimeOffRequest
@@ -159,16 +187,37 @@ public sealed class RequestsController(
             return NotFound();
         }
 
-        if (!workflowService.CanSubmit(request))
+        if (!CanAccessRequest(request))
         {
-            return BadRequest("Only draft or returned requests can be submitted.");
+            return Forbid();
         }
 
+        if (!workflowService.CanSubmit(request))
+        {
+            return this.CreateValidationProblemResponse(
+                "Invalid request status transition.",
+                "Only draft or returned requests can be submitted.");
+        }
+
+        var wasReturned = request.Status == RequestStatus.Returned;
+        request.ReviewerId = null;
+        request.ReviewComment = null;
+        request.ReviewedAt = null;
+        request.CancelledAt = null;
         request.Status = RequestStatus.Submitted;
         request.SubmittedAt = DateTimeOffset.UtcNow;
 
+        dbContext.Notifications.Add(new AppNotification
+        {
+            RecipientEmployeeId = request.EmployeeId,
+            Title = wasReturned ? "申請已重新送審" : "申請已送審",
+            Message = wasReturned
+                ? $"你的申請 {request.Id} 已重新送審。"
+                : $"你的申請 {request.Id} 已送審。",
+        });
+
         await dbContext.SaveChangesAsync(cancellationToken);
-        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Submitted", cancellationToken);
+        await TrySendTeamsStatusChangedAsync(request, "Submitted", cancellationToken);
         return Ok(request);
     }
 
@@ -182,6 +231,12 @@ public sealed class RequestsController(
         [FromBody] ReviewRequestDto input,
         CancellationToken cancellationToken)
     {
+        var reviewerEmployeeId = ResolveActorEmployeeId();
+        if (string.IsNullOrWhiteSpace(reviewerEmployeeId))
+        {
+            return Forbid();
+        }
+
         var request = await dbContext.TimeOffRequests.FirstOrDefaultAsync(entity => entity.Id == requestId, cancellationToken);
 
         if (request is null)
@@ -191,11 +246,13 @@ public sealed class RequestsController(
 
         if (!workflowService.CanApprove(request))
         {
-            return BadRequest("Only submitted requests can be approved.");
+            return this.CreateValidationProblemResponse(
+                "Invalid request status transition.",
+                "Only submitted requests can be approved.");
         }
 
         request.Status = RequestStatus.Approved;
-        request.ReviewerId = input.ReviewerId;
+        request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
 
@@ -207,7 +264,7 @@ public sealed class RequestsController(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Approved", cancellationToken);
+        await TrySendTeamsStatusChangedAsync(request, "Approved", cancellationToken);
         return Ok(request);
     }
 
@@ -221,6 +278,12 @@ public sealed class RequestsController(
         [FromBody] ReviewRequestDto input,
         CancellationToken cancellationToken)
     {
+        var reviewerEmployeeId = ResolveActorEmployeeId();
+        if (string.IsNullOrWhiteSpace(reviewerEmployeeId))
+        {
+            return Forbid();
+        }
+
         var request = await dbContext.TimeOffRequests.FirstOrDefaultAsync(entity => entity.Id == requestId, cancellationToken);
 
         if (request is null)
@@ -230,11 +293,13 @@ public sealed class RequestsController(
 
         if (!workflowService.CanReject(request))
         {
-            return BadRequest("Only submitted requests can be rejected.");
+            return this.CreateValidationProblemResponse(
+                "Invalid request status transition.",
+                "Only submitted requests can be rejected.");
         }
 
         request.Status = RequestStatus.Rejected;
-        request.ReviewerId = input.ReviewerId;
+        request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
 
@@ -246,7 +311,7 @@ public sealed class RequestsController(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Rejected", cancellationToken);
+        await TrySendTeamsStatusChangedAsync(request, "Rejected", cancellationToken);
         return Ok(request);
     }
 
@@ -260,6 +325,12 @@ public sealed class RequestsController(
         [FromBody] ReviewRequestDto input,
         CancellationToken cancellationToken)
     {
+        var reviewerEmployeeId = ResolveActorEmployeeId();
+        if (string.IsNullOrWhiteSpace(reviewerEmployeeId))
+        {
+            return Forbid();
+        }
+
         var request = await dbContext.TimeOffRequests.FirstOrDefaultAsync(entity => entity.Id == requestId, cancellationToken);
 
         if (request is null)
@@ -269,11 +340,13 @@ public sealed class RequestsController(
 
         if (!workflowService.CanReturn(request))
         {
-            return BadRequest("Only submitted requests can be returned.");
+            return this.CreateValidationProblemResponse(
+                "Invalid request status transition.",
+                "Only submitted requests can be returned.");
         }
 
         request.Status = RequestStatus.Returned;
-        request.ReviewerId = input.ReviewerId;
+        request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
 
@@ -285,7 +358,7 @@ public sealed class RequestsController(
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Returned", cancellationToken);
+        await TrySendTeamsStatusChangedAsync(request, "Returned", cancellationToken);
         return Ok(request);
     }
 
@@ -302,16 +375,90 @@ public sealed class RequestsController(
             return NotFound();
         }
 
+        if (!CanAccessRequest(request))
+        {
+            return Forbid();
+        }
+
         if (!workflowService.CanCancel(request))
         {
-            return BadRequest("Only draft or submitted requests can be cancelled.");
+            return this.CreateValidationProblemResponse(
+                "Invalid request status transition.",
+                "Only draft or submitted requests can be cancelled.");
         }
 
         request.Status = RequestStatus.Cancelled;
         request.CancelledAt = DateTimeOffset.UtcNow;
 
+        dbContext.Notifications.Add(new AppNotification
+        {
+            RecipientEmployeeId = request.EmployeeId,
+            Title = "申請已取消",
+            Message = $"你的申請 {request.Id} 已取消。",
+        });
+
         await dbContext.SaveChangesAsync(cancellationToken);
-        await teamsNotificationService.SendRequestStatusChangedAsync(request, "Cancelled", cancellationToken);
+        await TrySendTeamsStatusChangedAsync(request, "Cancelled", cancellationToken);
         return Ok(request);
+    }
+
+    /// <summary>
+    /// Sends status change to Teams without blocking primary workflow on failures.
+    /// </summary>
+    private async Task TrySendTeamsStatusChangedAsync(
+        TimeOffRequest request,
+        string actionName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await teamsNotificationService.SendRequestStatusChangedAsync(request, actionName, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Teams notification failed but workflow remains successful. RequestId={RequestId}, Action={ActionName}",
+                request.Id,
+                actionName);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether current user can access or modify the given request.
+    /// </summary>
+    private bool CanAccessRequest(TimeOffRequest request)
+    {
+        if (HasElevatedRequestAccess())
+        {
+            return true;
+        }
+
+        var currentEmployeeId = ResolveActorEmployeeId();
+        if (string.IsNullOrWhiteSpace(currentEmployeeId))
+        {
+            return false;
+        }
+
+        return string.Equals(request.EmployeeId, currentEmployeeId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Determines whether current user has manager-level visibility on requests.
+    /// </summary>
+    private bool HasElevatedRequestAccess()
+    {
+        return User.FindAll(ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .Any(role => string.Equals(role, "Administrator", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Resolves current authenticated employee identifier from claims.
+    /// </summary>
+    private string? ResolveActorEmployeeId()
+    {
+        return User.FindFirstValue("EmployeeId");
     }
 }

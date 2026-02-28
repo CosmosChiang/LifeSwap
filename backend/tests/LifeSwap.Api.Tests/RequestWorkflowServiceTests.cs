@@ -35,6 +35,17 @@ public sealed class RequestWorkflowServiceTests
         var service = new RequestWorkflowService();
         var returned = new TimeOffRequest { Status = RequestStatus.Returned };
 
-        Assert.True(service.CanCancel(returned));
+        Assert.False(service.CanCancel(returned));
+    }
+
+    [Fact]
+    public void CanCancel_ReturnsTrue_ForDraftAndSubmitted()
+    {
+        var service = new RequestWorkflowService();
+        var draft = new TimeOffRequest { Status = RequestStatus.Draft };
+        var submitted = new TimeOffRequest { Status = RequestStatus.Submitted };
+
+        Assert.True(service.CanCancel(draft));
+        Assert.True(service.CanCancel(submitted));
     }
 }

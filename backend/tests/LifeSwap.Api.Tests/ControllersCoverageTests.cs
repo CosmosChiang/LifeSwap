@@ -3,15 +3,20 @@ using LifeSwap.Api.Contracts;
 using LifeSwap.Api.Controllers;
 using LifeSwap.Api.Data;
 using LifeSwap.Api.Domain;
+using LifeSwap.Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace LifeSwap.Api.Tests;
 
 public sealed class ControllersCoverageTests
 {
+    private const string Rfc7807Type = "https://datatracker.ietf.org/doc/html/rfc7807";
+
     [Fact]
     public async Task NotificationsController_GetMyNotificationsAsync_ReturnsCurrentEmployeeOnly()
     {
@@ -118,6 +123,51 @@ public sealed class ControllersCoverageTests
         Assert.Equal("EN", summary.DepartmentCode);
     }
 
+    [Fact]
+    public async Task ReportsController_GetComplianceWarningsAsync_InvalidLimit_ReturnsProblemDetails()
+    {
+        await using var dbContext = await CreateDbContextAsync();
+        var controller = new ReportsController(dbContext);
+
+        var response = await controller.GetComplianceWarningsAsync(
+            DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(-1)),
+            DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(1)),
+            null,
+            0,
+            null,
+            null,
+            CancellationToken.None);
+
+        var badRequest = Assert.IsType<ObjectResult>(response.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
+
+        var problem = Assert.IsType<ProblemDetails>(badRequest.Value);
+        Assert.Equal("Invalid monthly overtime limit.", problem.Title);
+        Assert.Equal(Rfc7807Type, problem.Type);
+    }
+
+    [Fact]
+    public async Task AutomationController_RunReportAsync_WhenFailed_ReturnsProblemDetails()
+    {
+        var controller = new AutomationController(
+            new ThrowingExecutionService(),
+            new AutomationSchedulerStateService(Options.Create(new AutomationOptions
+            {
+                Enabled = true,
+            })),
+            new AutomationExecutionStatusStore(),
+            Options.Create(new AutomationOptions()),
+            NullLogger<AutomationController>.Instance);
+
+        var result = await controller.RunReportAsync(CancellationToken.None);
+        var error = Assert.IsType<ObjectResult>(result);
+
+        Assert.Equal(StatusCodes.Status500InternalServerError, error.StatusCode);
+        var problem = Assert.IsType<ProblemDetails>(error.Value);
+        Assert.Equal("Automation workflow failed.", problem.Title);
+        Assert.Equal(Rfc7807Type, problem.Type);
+    }
+
     private static ControllerContext BuildControllerContext(string employeeId)
     {
         var identity = new ClaimsIdentity(
@@ -147,5 +197,18 @@ public sealed class ControllersCoverageTests
         var dbContext = new AppDbContext(options);
         await dbContext.Database.EnsureCreatedAsync();
         return dbContext;
+    }
+
+    private sealed class ThrowingExecutionService : IAutomationExecutionService
+    {
+        public Task RunReminderAsync(string trigger, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task RunReportAsync(string trigger, CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("report failed");
+        }
     }
 }

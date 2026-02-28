@@ -31,12 +31,12 @@ public sealed class AuthController(
 
         if (user is null || !user.IsActive)
         {
-            return Unauthorized("Invalid username or password.");
+            return this.CreateAuthenticationProblemResponse("Invalid username or password.");
         }
 
         if (!passwordHashService.VerifyPassword(input.Password, user.PasswordHash))
         {
-            return Unauthorized("Invalid username or password.");
+            return this.CreateAuthenticationProblemResponse("Invalid username or password.");
         }
 
         var roles = user.UserRoles.Select(ur => ur.Role).ToList();
@@ -66,18 +66,22 @@ public sealed class AuthController(
     {
         if (string.IsNullOrWhiteSpace(input.CurrentPassword) || string.IsNullOrWhiteSpace(input.NewPassword))
         {
-            return BadRequest("CurrentPassword and NewPassword are required.");
+            return this.CreateValidationProblemResponse(
+                "Invalid password update request.",
+                "CurrentPassword and NewPassword are required.");
         }
 
         if (input.NewPassword.Length < 8)
         {
-            return BadRequest("NewPassword must be at least 8 characters.");
+            return this.CreateValidationProblemResponse(
+                "Invalid password policy.",
+                "NewPassword must be at least 8 characters.");
         }
 
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized();
+            return this.CreateAuthenticationProblemResponse("Authentication context is invalid.");
         }
 
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
@@ -88,7 +92,9 @@ public sealed class AuthController(
 
         if (!passwordHashService.VerifyPassword(input.CurrentPassword, user.PasswordHash))
         {
-            return BadRequest("Current password is incorrect.");
+            return this.CreateValidationProblemResponse(
+                "Invalid current password.",
+                "Current password is incorrect.");
         }
 
         user.PasswordHash = passwordHashService.HashPassword(input.NewPassword);

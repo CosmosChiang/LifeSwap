@@ -93,4 +93,16 @@ describe('fetchComplianceWarnings', () => {
         expectRequestPath(requestUrl, '/api/reports/compliance-warnings')
         expectQueryParam(requestUrl, 'departmentCode', 'EN')
     })
+
+    it('includes requestType in compliance-warnings query when provided', async () => {
+        const warnings = createComplianceWarnings()
+        const fetchSpy = mockFetchJsonOnce(warnings)
+
+        await fetchComplianceWarnings({ ...baseQuery, requestType: 1 })
+
+        const firstCall = requireFirstFetchCall(fetchSpy.mock.calls)
+        const [url] = firstCall
+        const requestUrl = toRequestUrl(url)
+        expectQueryParam(requestUrl, 'requestType', '1')
+    })
 })

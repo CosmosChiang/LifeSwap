@@ -173,6 +173,7 @@ public sealed class ReportsControllerTests
         var response = await controller.GetComplianceWarningsAsync(
             new DateOnly(2026, 2, 1),
             new DateOnly(2026, 2, 28),
+            null,
             8,
             null,
             null,
@@ -186,6 +187,96 @@ public sealed class ReportsControllerTests
         Assert.Equal("Critical", payload[0].Severity);
         Assert.Equal("E011", payload[1].EmployeeId);
         Assert.Equal("Warning", payload[1].Severity);
+    }
+
+    [Fact]
+    public async Task GetComplianceWarningsAsync_ReturnsEmpty_WhenRequestTypeIsCompOff()
+    {
+        await using var dbContext = await CreateDbContextAsync();
+        dbContext.TimeOffRequests.Add(
+            new TimeOffRequest
+            {
+                EmployeeId = "E010",
+                DepartmentCode = "ENG",
+                RequestType = RequestType.Overtime,
+                RequestDate = new DateOnly(2026, 2, 1),
+                StartTime = new TimeOnly(18, 0),
+                EndTime = new TimeOnly(22, 0),
+                Status = RequestStatus.Approved,
+                Reason = "Month start",
+            });
+        await dbContext.SaveChangesAsync();
+
+        var controller = new ReportsController(dbContext);
+
+        var response = await controller.GetComplianceWarningsAsync(
+            new DateOnly(2026, 2, 1),
+            new DateOnly(2026, 2, 28),
+            RequestType.CompOff,
+            8,
+            null,
+            null,
+            CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var payload = Assert.IsAssignableFrom<IReadOnlyCollection<ComplianceWarningDto>>(okResult.Value);
+        Assert.Empty(payload);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_CalculatesHours_FromOvertimeRange_WhenClockFieldsMissing()
+    {
+        await using var dbContext = await CreateDbContextAsync();
+        dbContext.TimeOffRequests.Add(
+            new TimeOffRequest
+            {
+                EmployeeId = "E001",
+                DepartmentCode = "ENG",
+                RequestType = RequestType.Overtime,
+                RequestDate = new DateOnly(2026, 2, 1),
+                OvertimeStartAt = new DateTimeOffset(2026, 2, 1, 18, 0, 0, TimeSpan.Zero),
+                OvertimeEndAt = new DateTimeOffset(2026, 2, 1, 21, 30, 0, TimeSpan.Zero),
+                Status = RequestStatus.Approved,
+                Reason = "Release support",
+            });
+        await dbContext.SaveChangesAsync();
+
+        var controller = new ReportsController(dbContext);
+
+        var response = await controller.GetSummaryAsync(
+            new DateOnly(2026, 2, 1),
+            new DateOnly(2026, 2, 28),
+            null,
+            null,
+            null,
+            CancellationToken.None);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var payload = Assert.IsType<ReportSummaryDto>(okResult.Value);
+        Assert.Equal(3.5, payload.ApprovedOvertimeHours);
+    }
+
+    [Fact]
+    public async Task GetComplianceWarningsAsync_WhenMonthlyLimitInvalid_ReturnsProblemDetails()
+    {
+        await using var dbContext = await CreateDbContextAsync();
+        var controller = new ReportsController(dbContext);
+
+        var response = await controller.GetComplianceWarningsAsync(
+            new DateOnly(2026, 2, 1),
+            new DateOnly(2026, 2, 28),
+            null,
+            0,
+            null,
+            null,
+            CancellationToken.None);
+
+        var badRequest = Assert.IsType<ObjectResult>(response.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, badRequest.StatusCode);
+
+        var problem = Assert.IsType<ProblemDetails>(badRequest.Value);
+        Assert.Equal("Invalid monthly overtime limit.", problem.Title);
+        Assert.Equal("monthlyOvertimeHourLimit must be greater than zero.", problem.Detail);
     }
 
     private static async Task<AppDbContext> CreateDbContextAsync()

@@ -7,144 +7,151 @@ featured_image: "n/a"
 categories: ["engineering"]
 tags: ["planning", "vue3", "dotnet", "sqlite", "mvp"]
 ai_note: "AI-assisted drafting"
-summary: "LifeSwap 的分階段開發計劃，定義 MVP 與後續擴充流程、驗收方式與風險控管。"
-post_date: "2026-02-15"
+summary: "LifeSwap 以產品完整性優先的 30 天衝刺計劃，已完成 P0 核心項目並持續推進 P1/P2。"
+post_date: "2026-03-01"
 ---
 
-# LifeSwap 開發計劃（供後續開發對齊）
+## 計劃目標（30 天）
 
-## TL;DR
+- 以「產品完整性優先」為原則，先補齊核心流程缺口，再擴充體驗與維運能力。
+- 30 天內達成：申請→審核→通知→報表→自動化 的可用閉環。
+- 任務粒度以可直接開工為標準，包含 API、前端、測試與文件同步。
 
-本計劃採分階段路線：先完成可上線的 MVP（申請、審核、記錄、
-權限、站內通知），再逐步擴充報表分析、法規預警、Teams 整合與
-自動化。
+## 目前狀態（截至 2026-02-28）
 
-法規基準以台灣勞基法為主，前端測試採 Vitest，後端測試採 xUnit。
+- 已有基礎可用：申請與審核流程、RBAC、站內通知、報表頁面與 API。
+- 已部分完成：通知整合（Teams Webhook 骨架）、自動化排程、法規預警與趨勢分析。
+- 主要缺口：跨模組一致性、例外情境覆蓋、端到端驗證、文件與驗收標準對齊。
 
-## 目標與範圍
+## 執行進度（截至 2026-03-01）
 
-### MVP（Phase 1）
+- 已完成 P0-1：申請狀態機與取消邊界一致化（Returned 可重送、不可取消）。
+- 已完成 P0-2：提交/核准/拒絕/退回/取消事件的站內通知補齊；Teams 發送改為失敗不阻塞主流程。
+- 已完成 P0-3：報表與預警口徑一致化（requestType/departmentCode 篩選與工時計算對齊）。
+- 已完成 P0-4：自動化流程可運行版（重試、執行狀態追蹤、手動重跑 API）。
+- 已完成前端管理介面：新增「自動化管理」頁與管理員首頁快捷入口。
+- 測試現況：後端測試全數通過；前端新增 API 測試檔，待在 Vitest 環境完成整包驗證。
 
-1. 加班申請：建立、送審、查詢、撤回（規則可控）
-2. 補休申請：建立、送審、查詢、撤回（規則可控）
-3. 申請審核：主管審核（核准、拒絕、退回）
-4. 歷史記錄：員工與主管可查詢狀態與細節
-5. 權限控制：員工、主管、系統管理者的基本 RBAC
-6. 通知：站內通知（申請狀態變更）
+## 測試覆蓋地圖（截至 2026-03-01）
 
-### 擴充（Phase 2）
+- 請求流程與狀態機：`backend/tests/LifeSwap.Api.Tests/RequestsControllerWorkflowTests.cs`、`backend/tests/LifeSwap.Api.Tests/RequestWorkflowServiceTests.cs`
+- 報表與預警：`backend/tests/LifeSwap.Api.Tests/ReportsControllerTests.cs`
+- 自動化與手動重跑：`backend/tests/LifeSwap.Api.Tests/AutomationWorkflowServiceTests.cs`、`backend/tests/LifeSwap.Api.Tests/AutomationExecutionServiceTests.cs`、`backend/tests/LifeSwap.Api.Tests/AutomationControllerTests.cs`
+- 控制器覆蓋與 ProblemDetails 契約：`backend/tests/LifeSwap.Api.Tests/ControllersCoverageTests.cs`、`backend/tests/LifeSwap.Api.Tests/ProblemDetailsContractTests.cs`
+- 認證與密碼流程：`backend/tests/LifeSwap.Api.Tests/AuthControllerTests.cs`
 
-1. 報表生成（部門、期間、類型）
-2. 法規上限預警與趨勢分析
-3. Teams API 通知整合
-4. 自動化流程（排程提醒、定期報告）
+## 優先級定義
 
-## 功能需求對應
+- P0：阻擋上線或造成核心流程中斷的項目，必須在 30 天內完成。
+- P1：提升穩定性與可維運性，應於 P0 完成後立即完成。
+- P2：體驗與優化項目，不阻擋上線但需排入本次衝刺尾段。
 
-1. 加班申請（Phase 1）
-2. 補休申請（Phase 1）
-3. 申請審核（Phase 1）
-4. 加班和補休記錄（Phase 1）
-5. 通知系統（Phase 1 站內通知；Phase 2 Teams）
-6. 報表生成（Phase 2）
-7. 用戶管理（Phase 1 基礎管理；Phase 2 強化）
-8. 權限控制（Phase 1）
-9. 使用網頁技術（Phase 1）
-10. 資料安全（Phase 1）
-11. 多語言支援（Phase 2）
-12. 移動端適配（Phase 2）
-13. API 接口（Phase 1）
-14. 資料分析與法規上限警告（Phase 2）
-15. 自動化流程（Phase 2）
+## 實作任務清單（Implementation-ready）
 
-## 技術選型
+### P0（產品完整性必做）
 
-- 前端：Vue.js（TypeScript）
-- 後端：.NET（ASP.NET Core）
-- 資料庫：SQLite
-- 認證：JWT
-- 部署：Docker
-- 測試：Vitest（前端）與 xUnit（後端）
-- 持續整合：GitHub Actions
-- API 文檔：Swagger / OpenAPI
-- 多語言支援：i18n 套件
-- 通知系統：Phase 1 站內通知；Phase 2 Teams API
-- 資料分析：內建分析工具或第三方開源套件
-- 自動化流程：排程任務（Cron）與事件驅動流程
-- 安全措施：HTTPS、敏感資料保護、RBAC、定期安全審計
+- 任務：統一申請狀態流轉與驗證規則（含 Returned 重送、取消邊界）。
+  - 交付：後端狀態轉移檢查、前端按鈕顯示規則一致、錯誤訊息一致化。
+  - 完成日：D1-D5
+- 任務：補齊通知事件閉環（站內通知必達，Teams 失敗不阻塞主流程）。
+  - 交付：提交/核准/拒絕/退回/重送/取消均產生可追蹤通知事件。
+  - 完成日：D3-D8
+- 任務：報表與預警資料一致性修正（與申請資料同一口徑）。
+  - 交付：期間、部門、類型篩選一致；預警門檻與 API 回傳欄位固定。
+  - 完成日：D6-D11
+- 任務：自動化流程最小可運行版本（排程提醒與定期報告）。
+  - 交付：排程啟停、錯誤重試、基本執行日誌與手動重跑入口。
+  - 完成日：D9-D14
+- 任務：核心流程測試補齊（後端 + 前端）。
+  - 交付：關鍵路徑測試通過，覆蓋提交流程、審核流程、通知與報表查詢。
+  - 完成日：D12-D18
 
-## 核心流程設計
+### P1（穩定性與維運）
 
-### 申請狀態機（草案）
+- 任務：權限矩陣補強（跨角色查詢與操作邊界）。
+  - 交付：管理者、主管、員工的可見範圍與可操作行為可測試且可追溯。
+  - 完成日：D15-D20
+- 任務：API 錯誤模型與文件對齊（Problem Details / 狀態碼一致）。
+  - 交付：常見錯誤案例文件化，前端可正確顯示使用者可理解訊息。
+  - 完成日：D18-D22
+- 任務：通知與自動化監控基線。
+  - 交付：失敗事件計數、最近執行狀態、手動重試流程文件。
+  - 完成日：D20-D24
 
-Draft → Submitted → Approved / Rejected / Returned → Cancelled
+### P2（體驗與優化）
 
-### 角色權限（草案）
+- 任務：報表 UI 可用性優化（查詢條件保留、空資料提示、多語系字串補齊）。
+  - 交付：報表頁可穩定呈現空態與錯誤態；i18n key 完整。
+  - 完成日：D22-D26
+- 任務：通知中心操作優化（已讀批次、篩選與排序）。
+  - 交付：通知清單互動流暢，API 與前端參數一致。
+  - 完成日：D24-D28
+- 任務：衝刺收斂與發布清單。
+  - 交付：版本變更摘要、已知限制、回滾步驟。
+  - 完成日：D28-D30
 
-- 員工：建立、查詢個人申請；撤回未審結案件
-- 主管：審核所屬範圍案件
-- 系統管理者：帳號、角色、系統設定
+## 30 天時程切分
 
-## 里程碑
+### D1-D10（閉環打底）
 
-### M0：規則與模型對齊
+- 完成 P0 前三項：狀態機、通知閉環、報表口徑一致。
+- 每日檢查：API 行為、前端流程、通知事件是否一致。
 
-- 完成法規口徑（台灣勞基法）與補休換算規則表
-- 完成資料模型與欄位字典
-- 完成驗收標準草案
+### D11-D20（品質補齊）
 
-### M1：MVP 功能可用
+- 完成 P0 測試補齊與 P1 權限矩陣。
+- 建立自動化流程最小監控與錯誤處理。
 
-- 申請與審核流程全鏈路完成
-- 站內通知可用
-- RBAC 最小可用
-- API 文件可供前後端協作
+### D21-D30（收斂與上線準備）
 
-### M2：品質與上線準備
+- 完成 P1 剩餘項與 P2 體驗優化。
+- 進行衝刺驗收、文件收斂與發布準備。
 
-- 關鍵流程測試覆蓋
-- Docker 化與 CI 基線
-- 安全檢查（基本權限、敏感資料保護）
+## 任務與關鍵檔案對應
 
-### M3：Phase 2 擴充
+### Backend
 
-- 報表、分析、預警
-- Teams 整合
-- 自動化排程與運維指標
+- 狀態流轉與驗證：`backend/src/LifeSwap.Api/Domain/TimeOffRequest.cs`、`backend/src/LifeSwap.Api/Services/RequestWorkflowService.cs`、`backend/src/LifeSwap.Api/Controllers/RequestsController.cs`
+- 通知閉環：`backend/src/LifeSwap.Api/Controllers/NotificationsController.cs`、`backend/src/LifeSwap.Api/Services/AutomationWorkflowService.cs`
+- 報表與預警：`backend/src/LifeSwap.Api/Controllers/ReportsController.cs`、`backend/src/LifeSwap.Api/Contracts/ReportDtos.cs`
+- 自動化排程：`backend/src/LifeSwap.Api/Services/AutomationSchedulerHostedService.cs`、`backend/src/LifeSwap.Api/Services/AutomationOptions.cs`
 
-### Phase 2 目前進度（2026-02-15）
+### Frontend
 
-- 已完成：報表摘要 API（期間、類型、部門篩選）
-- 已完成：趨勢分析 API（日維度）
-- 已完成：法規上限預警 API（月加班工時門檻）
-- 已完成：前端報表與預警檢視介面
-- 已完成：部門欄位落地（申請資料模型與查詢條件）
-- 已完成：Teams Webhook 通知整合骨架（可由設定啟用）
-- 已完成：自動化流程（排程提醒、定期報告）
+- 申請與審核流程：`frontend/src/views/MyRequests.vue`、`frontend/src/views/ToReview.vue`、`frontend/src/composables/useRequestWorkflow.ts`
+- 通知：`frontend/src/views/Notifications.vue`、`frontend/src/api.ts`
+- 報表與預警：`frontend/src/views/Reports.vue`、`frontend/src/__tests__/Reports.test.ts`
+- 權限與角色管理：`frontend/src/views/AdminUsers.vue`、`frontend/src/views/AdminRoles.vue`、`frontend/src/composables/useAuth.ts`
 
-### MVP 目前進度（2026-02-26）
+### Tests
 
-- 已完成：申請審核補齊「退回（Returned）」流程（API、前端審核動作、狀態顯示）
-- 已完成：退回後可重新送審，並保留站內通知與 Teams 狀態事件
-- 已完成：管理員可於帳號管理頁進行角色配置與快速角色切換
+- 後端流程與控制器：`backend/tests/LifeSwap.Api.Tests/RequestWorkflowServiceTests.cs`、`backend/tests/LifeSwap.Api.Tests/ReportsControllerTests.cs`、`backend/tests/LifeSwap.Api.Tests/ControllersCoverageTests.cs`
+- 前端 API 與頁面：`frontend/src/__tests__/api.notifications.test.ts`、`frontend/src/__tests__/api.reports.test.ts`、`frontend/src/__tests__/Notifications.test.ts`
 
-## 驗收標準（Definition of Done）
+### Docs
 
-- 每項功能具備：需求描述、流程、API、測試案例、驗收條件
-- 角色授權符合矩陣，不可越權查詢或操作
-- 申請狀態流轉符合狀態機規則
-- 核心流程可追溯（時間、操作人、結果）
-- 文件與技術選型一致（含測試框架）
+- 衝刺計劃與驗收：`plan.md`
+- 前端使用與啟動資訊：`frontend/README.md`
+- API 行為對齊（以 Swagger 實際輸出為準）：`backend/src/LifeSwap.Api/Program.cs`
 
-## 主要風險與對策
+## 驗證計劃（Verification）
 
-- 法規計算歧異：固定法域與計算口徑，規則表版本化
-- 權限邊界不清：先完成角色矩陣再開發 API
-- 整合依賴不確定：採分階段與可選擴充策略，不阻塞核心功能
-- 需求擴張：以 MVP 驗收準則控制範圍
+- 單元驗證：後端 xUnit 與前端 Vitest 皆需通過本次新增與既有關鍵測試。
+- 整合驗證：以「建立申請→審核→通知→報表反映」進行端到端手動測試。
+- 角色驗證：員工/主管/管理者三角色執行同場景，確認無越權與資料外洩。
+- 失敗驗證：模擬 Teams 通知失敗、自動化任務失敗，主流程不得中斷。
+- 回歸驗證：對已部分完成功能（報表/通知/自動化）做回歸，避免退化。
 
-## 開發協作規範
+## 驗收標準（Acceptance Criteria）
 
-- 需求新增需標註所屬階段（MVP / Phase 2）
-- 變更需同步更新流程、狀態機與驗收條件
-- 每次迭代同步更新本文件，確保與實作一致
+- 核心流程可用：申請、審核、查詢、通知、報表在預期條件下可完整完成。
+- 資料一致：同一條件下 API 與前端顯示結果一致，報表與預警口徑一致。
+- 權限正確：不同角色僅可存取授權範圍，越權請求回傳正確錯誤碼。
+- 可維運：排程與通知失敗可觀測、可重試、可追蹤。
+- 可交付：測試通過、文件更新、已知限制與回滾步驟已記錄。
+
+## Execution Notes
+
+- 先做 P0，不同功能線可並行，但每日以「狀態機與資料口徑一致」為合併門檻。
+- 每完成一項任務即同步更新測試與 `plan.md`，避免最後集中補文件。
+- 報表/通知/自動化既有能力以「補齊與穩定」為主，不重寫已可運作模組。

@@ -22,6 +22,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['Administrator'] },
   },
   {
+    path: '/admin/automation',
+    component: () => import('./views/AdminAutomation.vue'),
+    name: 'AdminAutomation',
+    meta: { requiresAuth: true, roles: ['Administrator'] },
+  },
+  {
     path: '/login',
     component: () => import('./views/Login.vue'),
     name: 'Login',

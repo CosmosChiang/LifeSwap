@@ -96,6 +96,7 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyCollection<ComplianceWarningDto>>> GetComplianceWarningsAsync(
         [FromQuery] DateOnly? startDate,
         [FromQuery] DateOnly? endDate,
+        [FromQuery] RequestType? requestType,
         [FromQuery] double monthlyOvertimeHourLimit = 46,
         [FromQuery] string? employeeId = null,
         [FromQuery] string? departmentCode = null,
@@ -103,10 +104,17 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
     {
         if (monthlyOvertimeHourLimit <= 0)
         {
-            return BadRequest("monthlyOvertimeHourLimit must be greater than zero.");
+            return this.CreateValidationProblemResponse(
+                "Invalid monthly overtime limit.",
+                "monthlyOvertimeHourLimit must be greater than zero.");
         }
 
         var (rangeStart, rangeEnd) = ResolveRange(startDate, endDate);
+
+        if (requestType is RequestType.CompOff)
+        {
+            return Ok(Array.Empty<ComplianceWarningDto>());
+        }
 
         var approvedOvertimeRequests = await BuildFilteredQuery(rangeStart, rangeEnd, RequestType.Overtime, employeeId, departmentCode)
             .Where(request => request.Status == RequestStatus.Approved)
@@ -184,7 +192,8 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
         if (!string.IsNullOrWhiteSpace(departmentCode))
         {
             var normalizedDepartmentCode = departmentCode.Trim();
-            query = query.Where(request => request.DepartmentCode.StartsWith(normalizedDepartmentCode));
+            var normalizedDepartmentCodeUpper = normalizedDepartmentCode.ToUpperInvariant();
+            query = query.Where(request => request.DepartmentCode.ToUpper().StartsWith(normalizedDepartmentCodeUpper));
         }
 
         return query;
@@ -195,18 +204,28 @@ public sealed class ReportsController(AppDbContext dbContext) : ControllerBase
     /// </summary>
     private static double CalculateHours(TimeOffRequest request)
     {
-        if (request.StartTime is null || request.EndTime is null)
+        if (request.StartTime is not null && request.EndTime is not null)
+        {
+            var duration = request.EndTime.Value.ToTimeSpan() - request.StartTime.Value.ToTimeSpan();
+
+            if (duration > TimeSpan.Zero)
+            {
+                return duration.TotalHours;
+            }
+        }
+
+        if (request.OvertimeStartAt is null || request.OvertimeEndAt is null)
         {
             return 0;
         }
 
-        var duration = request.EndTime.Value.ToTimeSpan() - request.StartTime.Value.ToTimeSpan();
+        var overtimeDuration = request.OvertimeEndAt.Value - request.OvertimeStartAt.Value;
 
-        if (duration <= TimeSpan.Zero)
+        if (overtimeDuration <= TimeSpan.Zero)
         {
             return 0;
         }
 
-        return duration.TotalHours;
+        return overtimeDuration.TotalHours;
     }
 }

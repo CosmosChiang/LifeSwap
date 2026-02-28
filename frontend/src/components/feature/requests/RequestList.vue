@@ -98,7 +98,7 @@ async function handleRowCancel(requestId: string) {
               @click="handleRowSubmit(record.id)">
               {{ t('requestList.actions.submit') }}
             </a-button>
-            <a-button v-if="[0, 1, 5].includes(record.status)" size="small" @click="handleRowCancel(record.id)">
+            <a-button v-if="[0, 1].includes(record.status)" size="small" @click="handleRowCancel(record.id)">
               {{ t('requestList.actions.cancel') }}
             </a-button>
             <a-button size="small" type="text" @click="openDetailsModal(record)">

@@ -32,7 +32,6 @@ export function useRequestWorkflow() {
 
   async function handleApprove(
     requestId: string,
-    reviewerId: string,
     comment: string,
   ): Promise<boolean> {
     message.value = ''
@@ -41,7 +40,6 @@ export function useRequestWorkflow() {
 
     try {
       await approveRequest(requestId, {
-        reviewerId,
         comment,
       })
       message.value = i18n.global.t('workflow.approveSuccess')
@@ -56,7 +54,6 @@ export function useRequestWorkflow() {
 
   async function handleReject(
     requestId: string,
-    reviewerId: string,
     comment: string,
   ): Promise<boolean> {
     message.value = ''
@@ -65,7 +62,6 @@ export function useRequestWorkflow() {
 
     try {
       await rejectRequest(requestId, {
-        reviewerId,
         comment,
       })
       message.value = i18n.global.t('workflow.rejectSuccess')
@@ -80,7 +76,6 @@ export function useRequestWorkflow() {
 
   async function handleReturn(
     requestId: string,
-    reviewerId: string,
     comment: string,
   ): Promise<boolean> {
     message.value = ''
@@ -89,7 +84,6 @@ export function useRequestWorkflow() {
 
     try {
       await returnRequest(requestId, {
-        reviewerId,
         comment,
       })
       message.value = i18n.global.t('workflow.returnSuccess')
