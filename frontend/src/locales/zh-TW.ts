@@ -84,11 +84,13 @@ export default {
         requestType: '類型',
         overtimeStartAt: '開始加班日期',
         requestStatus: '狀態',
+        loadFailed: '無法載入首頁資料',
     },
     requests: {
         pageTitle: '我的申請',
         createCard: '建立申請',
         listCard: '我的申請',
+        loadFailed: '無法載入我的申請',
     },
     requestType: {
         overtime: '加班',
@@ -123,6 +125,7 @@ export default {
         overtimeContentPlaceholder: '請輸入加班內容（必填）',
         overtimeReasonPlaceholder: '請輸入加班原因（必填）',
         createDraft: '建立草稿',
+        createDraftSuccess: '草稿已建立',
         validation: {
             requiredFields: '請完整填寫加班專案、加班內容、加班原因。',
             invalidOvertimeRange: '結束加班時間必須晚於開始加班日期。',
@@ -330,6 +333,7 @@ export default {
     review: {
         pageTitle: '待審核',
         cardTitle: '待審核申請 ({count})',
+        loadFailed: '無法取得待審核申請',
         columns: {
             id: '申請 ID',
             employeeId: '員工',

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { message as antMessage } from 'ant-design-vue'
 import {
   approveRequest,
   cancelRequest,
@@ -21,9 +22,11 @@ export function useRequestWorkflow() {
     try {
       await submitRequest(requestId)
       message.value = i18n.global.t('workflow.submitSuccess')
+      antMessage.success(message.value)
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
+      antMessage.error(errorMessage.value)
       return false
     } finally {
       loading.value = false
@@ -43,9 +46,11 @@ export function useRequestWorkflow() {
         comment,
       })
       message.value = i18n.global.t('workflow.approveSuccess')
+      antMessage.success(message.value)
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
+      antMessage.error(errorMessage.value)
       return false
     } finally {
       loading.value = false
@@ -65,9 +70,11 @@ export function useRequestWorkflow() {
         comment,
       })
       message.value = i18n.global.t('workflow.rejectSuccess')
+      antMessage.success(message.value)
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
+      antMessage.error(errorMessage.value)
       return false
     } finally {
       loading.value = false
@@ -87,9 +94,11 @@ export function useRequestWorkflow() {
         comment,
       })
       message.value = i18n.global.t('workflow.returnSuccess')
+      antMessage.success(message.value)
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
+      antMessage.error(errorMessage.value)
       return false
     } finally {
       loading.value = false
@@ -104,9 +113,11 @@ export function useRequestWorkflow() {
     try {
       await cancelRequest(requestId)
       message.value = i18n.global.t('workflow.cancelSuccess')
+      antMessage.success(message.value)
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message
+      antMessage.error(errorMessage.value)
       return false
     } finally {
       loading.value = false

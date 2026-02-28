@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { message } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
@@ -16,6 +17,7 @@ async function loadRequests() {
     requests.value = await fetchRequests()
   } catch (error) {
     console.error('Failed to load requests:', error)
+    message.error(t('requests.loadFailed'))
   } finally {
     loading.value = false
   }
