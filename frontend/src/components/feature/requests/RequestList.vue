@@ -119,17 +119,29 @@ async function handleRowCancel(requestId: string) {
         <a-descriptions-item :label="t('requestList.details.employeeId')">
           {{ selectedRequest.employeeId }}
         </a-descriptions-item>
+        <a-descriptions-item :label="t('requestList.details.applicant')">
+          {{ selectedRequest.applicantName || '-' }}
+        </a-descriptions-item>
         <a-descriptions-item :label="t('requestList.details.requestType')">
           {{ getRequestTypeLabel(selectedRequest.requestType) }}
         </a-descriptions-item>
-        <a-descriptions-item :label="t('requestList.details.requestDate')">
-          {{ selectedRequest.requestDate }}
+        <a-descriptions-item :label="t('requestList.details.overtimeStartAt')">
+          {{ selectedRequest.overtimeStartAt || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item :label="t('requestList.details.time')">
-          {{ selectedRequest.startTime }} - {{ selectedRequest.endTime }}
+        <a-descriptions-item :label="t('requestList.details.overtimeEndAt')">
+          {{ selectedRequest.overtimeEndAt || '-' }}
         </a-descriptions-item>
-        <a-descriptions-item :label="t('requestList.details.reason')">
-          {{ selectedRequest.reason }}
+        <a-descriptions-item :label="t('requestList.details.compTimeHours')">
+          {{ selectedRequest.compTimeHours?.toFixed?.(2) ?? '0.00' }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('requestList.details.overtimeProject')">
+          {{ selectedRequest.overtimeProject || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('requestList.details.overtimeContent')">
+          {{ selectedRequest.overtimeContent || '-' }}
+        </a-descriptions-item>
+        <a-descriptions-item :label="t('requestList.details.overtimeReason')">
+          {{ selectedRequest.overtimeReason || selectedRequest.reason }}
         </a-descriptions-item>
         <a-descriptions-item :label="t('requestList.details.status')">
           <a-tag :color="getRequestStatusColor(selectedRequest.status)">

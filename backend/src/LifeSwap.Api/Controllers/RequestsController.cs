@@ -95,25 +95,49 @@ public sealed class RequestsController(
         [FromBody] CreateRequestDto input,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(input.EmployeeId) || string.IsNullOrWhiteSpace(input.Reason))
+        if (string.IsNullOrWhiteSpace(input.EmployeeId) ||
+            string.IsNullOrWhiteSpace(input.OvertimeProject) ||
+            string.IsNullOrWhiteSpace(input.OvertimeContent) ||
+            string.IsNullOrWhiteSpace(input.OvertimeReason))
         {
-            return BadRequest("EmployeeId and Reason are required.");
+            return BadRequest("EmployeeId, OvertimeProject, OvertimeContent, and OvertimeReason are required.");
         }
 
-        if (input.RequestType is RequestType.Overtime && (input.StartTime is null || input.EndTime is null))
+        if (input.OvertimeEndAt <= input.OvertimeStartAt)
         {
-            return BadRequest("Overtime request requires start and end time.");
+            return BadRequest("OvertimeEndAt must be later than OvertimeStartAt.");
+        }
+
+        var normalizedEmployeeId = input.EmployeeId.Trim();
+        var applicant = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.EmployeeId == normalizedEmployeeId, cancellationToken);
+
+        var normalizedStartAt = input.OvertimeStartAt;
+        var normalizedEndAt = input.OvertimeEndAt;
+        var calculatedCompHours = Math.Round((normalizedEndAt - normalizedStartAt).TotalHours, 2);
+
+        if (calculatedCompHours <= 0)
+        {
+            return BadRequest("Calculated comp time hours must be greater than zero.");
         }
 
         var request = new TimeOffRequest
         {
-            RequestType = input.RequestType,
-            EmployeeId = input.EmployeeId.Trim(),
-            DepartmentCode = string.IsNullOrWhiteSpace(input.DepartmentCode) ? "UNASSIGNED" : input.DepartmentCode.Trim(),
-            RequestDate = input.RequestDate,
-            StartTime = input.StartTime,
-            EndTime = input.EndTime,
-            Reason = input.Reason.Trim(),
+            RequestType = RequestType.Overtime,
+            EmployeeId = normalizedEmployeeId,
+            ApplicantName = applicant?.Username ?? normalizedEmployeeId,
+            DepartmentCode = applicant?.DepartmentCode ?? "UNASSIGNED",
+            RequestDate = DateOnly.FromDateTime(normalizedStartAt.DateTime),
+            StartTime = TimeOnly.FromTimeSpan(normalizedStartAt.TimeOfDay),
+            EndTime = TimeOnly.FromTimeSpan(normalizedEndAt.TimeOfDay),
+            OvertimeStartAt = normalizedStartAt,
+            OvertimeEndAt = normalizedEndAt,
+            CompTimeHours = calculatedCompHours,
+            OvertimeProject = input.OvertimeProject.Trim(),
+            OvertimeContent = input.OvertimeContent.Trim(),
+            OvertimeReason = input.OvertimeReason.Trim(),
+            Reason = input.OvertimeReason.Trim(),
         };
 
         dbContext.TimeOffRequests.Add(request);

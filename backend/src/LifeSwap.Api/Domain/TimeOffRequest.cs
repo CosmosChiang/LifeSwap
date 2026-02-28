@@ -8,6 +8,8 @@ public sealed class TimeOffRequest
 
     public string EmployeeId { get; set; } = string.Empty;
 
+    public string ApplicantName { get; set; } = string.Empty;
+
     public string DepartmentCode { get; set; } = string.Empty;
 
     public DateOnly RequestDate { get; set; }
@@ -15,6 +17,18 @@ public sealed class TimeOffRequest
     public TimeOnly? StartTime { get; set; }
 
     public TimeOnly? EndTime { get; set; }
+
+    public DateTimeOffset? OvertimeStartAt { get; set; }
+
+    public DateTimeOffset? OvertimeEndAt { get; set; }
+
+    public double CompTimeHours { get; set; }
+
+    public string OvertimeProject { get; set; } = string.Empty;
+
+    public string OvertimeContent { get; set; } = string.Empty;
+
+    public string OvertimeReason { get; set; } = string.Empty;
 
     public string Reason { get; set; } = string.Empty;
 

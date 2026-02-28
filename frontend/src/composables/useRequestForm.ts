@@ -5,13 +5,12 @@ import { i18n } from '../i18n'
 
 export function useRequestForm() {
   const form = reactive<CreateRequestPayload>({
-    requestType: 0,
     employeeId: 'E001',
-    departmentCode: 'ENG',
-    requestDate: new Date().toISOString().slice(0, 10),
-    startTime: '18:00',
-    endTime: '20:00',
-    reason: '',
+    overtimeStartAt: new Date().toISOString(),
+    overtimeEndAt: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    overtimeProject: '',
+    overtimeContent: '',
+    overtimeReason: '',
   })
 
   const message = ref('')
@@ -22,8 +21,8 @@ export function useRequestForm() {
     message.value = ''
     errorMessage.value = ''
 
-    if (!form.reason.trim()) {
-      errorMessage.value = i18n.global.t('requestForm.validation.reasonRequired')
+    if (!form.overtimeProject.trim() || !form.overtimeContent.trim() || !form.overtimeReason.trim()) {
+      errorMessage.value = i18n.global.t('requestForm.validation.requiredFields')
       return false
     }
 
@@ -31,10 +30,14 @@ export function useRequestForm() {
     try {
       await createRequest({
         ...form,
-        reason: form.reason.trim(),
+        overtimeProject: form.overtimeProject.trim(),
+        overtimeContent: form.overtimeContent.trim(),
+        overtimeReason: form.overtimeReason.trim(),
       })
       message.value = i18n.global.t('requestForm.createDraft')
-      form.reason = ''
+      form.overtimeProject = ''
+      form.overtimeContent = ''
+      form.overtimeReason = ''
       return true
     } catch (error) {
       errorMessage.value = (error as Error).message

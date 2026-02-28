@@ -46,9 +46,9 @@ const columns = [
     width: 80,
   },
   {
-    title: t('home.requestDate'),
-    dataIndex: 'requestDate',
-    key: 'requestDate',
+    title: t('home.overtimeStartAt'),
+    dataIndex: 'overtimeStartAt',
+    key: 'overtimeStartAt',
     width: 100,
   },
   {

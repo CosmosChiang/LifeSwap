@@ -85,24 +85,62 @@ using (var scope = app.Services.CreateScope())
         using var tableInfoCommand = connection.CreateCommand();
         tableInfoCommand.CommandText = "PRAGMA table_info('TimeOffRequests');";
 
-        var hasDepartmentCodeColumn = false;
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         using (var reader = tableInfoCommand.ExecuteReader())
         {
             while (reader.Read())
             {
                 var columnName = reader.GetString(1);
-                if (columnName == nameof(TimeOffRequest.DepartmentCode))
-                {
-                    hasDepartmentCodeColumn = true;
-                    break;
-                }
+                columns.Add(columnName);
             }
         }
 
-        if (!hasDepartmentCodeColumn)
+        if (!columns.Contains(nameof(TimeOffRequest.DepartmentCode)))
         {
             dbContext.Database.ExecuteSqlRaw(
                 "ALTER TABLE TimeOffRequests ADD COLUMN DepartmentCode TEXT NOT NULL DEFAULT 'UNASSIGNED';");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.ApplicantName)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN ApplicantName TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.OvertimeStartAt)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeStartAt TEXT NULL;");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.OvertimeEndAt)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeEndAt TEXT NULL;");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.CompTimeHours)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN CompTimeHours REAL NOT NULL DEFAULT 0;");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.OvertimeProject)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeProject TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.OvertimeContent)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeContent TEXT NOT NULL DEFAULT '';");
+        }
+
+        if (!columns.Contains(nameof(TimeOffRequest.OvertimeReason)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeReason TEXT NOT NULL DEFAULT '';");
         }
     }
 

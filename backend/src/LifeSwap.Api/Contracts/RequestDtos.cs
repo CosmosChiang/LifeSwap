@@ -3,13 +3,12 @@ using LifeSwap.Api.Domain;
 namespace LifeSwap.Api.Contracts;
 
 public sealed record CreateRequestDto(
-    RequestType RequestType,
     string EmployeeId,
-    string? DepartmentCode,
-    DateOnly RequestDate,
-    TimeOnly? StartTime,
-    TimeOnly? EndTime,
-    string Reason);
+    DateTimeOffset OvertimeStartAt,
+    DateTimeOffset OvertimeEndAt,
+    string OvertimeProject,
+    string OvertimeContent,
+    string OvertimeReason);
 
 public sealed record ReviewRequestDto(
     string ReviewerId,

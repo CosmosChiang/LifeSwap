@@ -6,10 +6,17 @@ export interface TimeOffRequest {
     id: string
     requestType: RequestType
     employeeId: string
+    applicantName: string
     departmentCode: string
     requestDate: string
     startTime: string | null
     endTime: string | null
+    overtimeStartAt: string | null
+    overtimeEndAt: string | null
+    compTimeHours: number
+    overtimeProject: string
+    overtimeContent: string
+    overtimeReason: string
     reason: string
     status: RequestStatus
     reviewerId: string | null
@@ -21,13 +28,12 @@ export interface TimeOffRequest {
 }
 
 export interface CreateRequestPayload {
-    requestType: RequestType
     employeeId: string
-    departmentCode?: string | null
-    requestDate: string
-    startTime: string | null
-    endTime: string | null
-    reason: string
+    overtimeStartAt: string
+    overtimeEndAt: string
+    overtimeProject: string
+    overtimeContent: string
+    overtimeReason: string
 }
 
 export interface ReviewPayload {

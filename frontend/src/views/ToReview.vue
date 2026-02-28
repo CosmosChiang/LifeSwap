@@ -48,21 +48,45 @@ const columns = computed(() => [
     width: 100,
   },
   {
+    title: t('review.columns.applicant'),
+    dataIndex: 'applicantName',
+    key: 'applicantName',
+    width: 120,
+  },
+  {
     title: t('review.columns.requestType'),
     dataIndex: 'requestType',
     key: 'requestType',
     width: 100,
   },
   {
-    title: t('review.columns.requestDate'),
-    dataIndex: 'requestDate',
-    key: 'requestDate',
+    title: t('review.columns.overtimeStartAt'),
+    dataIndex: 'overtimeStartAt',
+    key: 'overtimeStartAt',
+    width: 180,
+  },
+  {
+    title: t('review.columns.overtimeEndAt'),
+    dataIndex: 'overtimeEndAt',
+    key: 'overtimeEndAt',
+    width: 180,
+  },
+  {
+    title: t('review.columns.compTimeHours'),
+    dataIndex: 'compTimeHours',
+    key: 'compTimeHours',
     width: 120,
   },
   {
-    title: t('review.columns.reason'),
-    dataIndex: 'reason',
-    key: 'reason',
+    title: t('review.columns.overtimeProject'),
+    dataIndex: 'overtimeProject',
+    key: 'overtimeProject',
+    width: 180,
+  },
+  {
+    title: t('review.columns.overtimeReason'),
+    dataIndex: 'overtimeReason',
+    key: 'overtimeReason',
   },
   {
     title: t('review.columns.actions'),
@@ -133,6 +157,12 @@ onMounted(() => {
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'requestType'">
             {{ getRequestTypeLabel(record.requestType) }}
+          </template>
+          <template v-if="column.key === 'compTimeHours'">
+            {{ (record.compTimeHours ?? 0).toFixed(2) }}
+          </template>
+          <template v-if="column.key === 'overtimeReason'">
+            {{ record.overtimeReason || record.reason }}
           </template>
 
           <template v-if="column.key === 'actions'">
