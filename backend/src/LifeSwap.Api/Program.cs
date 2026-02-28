@@ -145,6 +145,12 @@ using (var scope = app.Services.CreateScope())
             dbContext.Database.ExecuteSqlRaw(
                 "ALTER TABLE TimeOffRequests ADD COLUMN OvertimeReason TEXT NOT NULL DEFAULT '';");
         }
+
+        if (!columns.Contains(nameof(TimeOffRequest.RowVersion)))
+        {
+            dbContext.Database.ExecuteSqlRaw(
+                "ALTER TABLE TimeOffRequests ADD COLUMN RowVersion TEXT NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';");
+        }
     }
 
     // Seed initial data (roles and test users)

@@ -426,6 +426,142 @@ public sealed class RequestsControllerWorkflowTests
         };
     }
 
+    [Fact]
+    public async Task ApproveAsync_WhenConcurrentWriteDetected_ReturnsConflict()
+    {
+        var (options, requestId) = await CreateSharedDbWithSubmittedRequestAsync();
+
+        // Admin A's context: pre-load the entity into the change tracker (captures the original RowVersion)
+        await using var contextA = new AppDbContext(options);
+        var reqA = await contextA.TimeOffRequests.FindAsync(requestId);
+        Assert.NotNull(reqA);
+
+        // Simulate Admin B approving concurrently — changes RowVersion in the database
+        await using var contextB = new AppDbContext(options);
+        var reqB = await contextB.TimeOffRequests.FindAsync(requestId);
+        reqB!.Status = RequestStatus.Approved;
+        reqB!.ReviewerId = "ADMIN002";
+        reqB!.ReviewComment = "Approved by Admin B";
+        reqB!.ReviewedAt = DateTimeOffset.UtcNow;
+        reqB!.RowVersion = Guid.NewGuid();
+        await contextB.SaveChangesAsync();
+
+        // Admin A's controller tries to approve — contextA still has the stale RowVersion
+        var controller = new RequestsController(
+            contextA,
+            new RequestWorkflowService(),
+            new NoOpTeamsNotificationService(),
+            NullLogger<RequestsController>.Instance)
+        {
+            ControllerContext = BuildControllerContext("ADMIN001", "Administrator"),
+        };
+
+        var result = await controller.ApproveAsync(requestId, new ReviewRequestDto("Approved by Admin A"), CancellationToken.None);
+
+        // Second admin should receive 409 Conflict because the RowVersion no longer matches
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+        Assert.Equal(StatusCodes.Status409Conflict, conflict.StatusCode);
+    }
+
+    [Fact]
+    public async Task RejectAsync_WhenConcurrentWriteDetected_ReturnsConflict()
+    {
+        var (options, requestId) = await CreateSharedDbWithSubmittedRequestAsync();
+
+        await using var contextA = new AppDbContext(options);
+        var reqA = await contextA.TimeOffRequests.FindAsync(requestId);
+        Assert.NotNull(reqA);
+
+        await using var contextB = new AppDbContext(options);
+        var reqB = await contextB.TimeOffRequests.FindAsync(requestId);
+        reqB!.Status = RequestStatus.Rejected;
+        reqB!.ReviewerId = "ADMIN002";
+        reqB!.ReviewComment = "Rejected by Admin B";
+        reqB!.ReviewedAt = DateTimeOffset.UtcNow;
+        reqB!.RowVersion = Guid.NewGuid();
+        await contextB.SaveChangesAsync();
+
+        var controller = new RequestsController(
+            contextA,
+            new RequestWorkflowService(),
+            new NoOpTeamsNotificationService(),
+            NullLogger<RequestsController>.Instance)
+        {
+            ControllerContext = BuildControllerContext("ADMIN001", "Administrator"),
+        };
+
+        var result = await controller.RejectAsync(requestId, new ReviewRequestDto("Rejected by Admin A"), CancellationToken.None);
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+        Assert.Equal(StatusCodes.Status409Conflict, conflict.StatusCode);
+    }
+
+    [Fact]
+    public async Task ReturnAsync_WhenConcurrentWriteDetected_ReturnsConflict()
+    {
+        var (options, requestId) = await CreateSharedDbWithSubmittedRequestAsync();
+
+        await using var contextA = new AppDbContext(options);
+        var reqA = await contextA.TimeOffRequests.FindAsync(requestId);
+        Assert.NotNull(reqA);
+
+        await using var contextB = new AppDbContext(options);
+        var reqB = await contextB.TimeOffRequests.FindAsync(requestId);
+        reqB!.Status = RequestStatus.Returned;
+        reqB!.ReviewerId = "ADMIN002";
+        reqB!.ReviewComment = "Returned by Admin B";
+        reqB!.ReviewedAt = DateTimeOffset.UtcNow;
+        reqB!.RowVersion = Guid.NewGuid();
+        await contextB.SaveChangesAsync();
+
+        var controller = new RequestsController(
+            contextA,
+            new RequestWorkflowService(),
+            new NoOpTeamsNotificationService(),
+            NullLogger<RequestsController>.Instance)
+        {
+            ControllerContext = BuildControllerContext("ADMIN001", "Administrator"),
+        };
+
+        var result = await controller.ReturnAsync(requestId, new ReviewRequestDto("Returned by Admin A"), CancellationToken.None);
+
+        var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+        Assert.Equal(StatusCodes.Status409Conflict, conflict.StatusCode);
+    }
+
+    private static async Task<(DbContextOptions<AppDbContext> Options, Guid RequestId)> CreateSharedDbWithSubmittedRequestAsync()
+    {
+        var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var setupCtx = new AppDbContext(options);
+        await setupCtx.Database.EnsureCreatedAsync();
+
+        var request = new TimeOffRequest
+        {
+            EmployeeId = "E001",
+            ApplicantName = "Alice",
+            DepartmentCode = "ENG",
+            RequestType = RequestType.Overtime,
+            RequestDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+            OvertimeStartAt = DateTimeOffset.UtcNow.AddHours(-3),
+            OvertimeEndAt = DateTimeOffset.UtcNow.AddHours(-1),
+            OvertimeProject = "P1",
+            OvertimeContent = "Work",
+            OvertimeReason = "Deadline",
+            Reason = "Deadline",
+            Status = RequestStatus.Submitted,
+        };
+        setupCtx.TimeOffRequests.Add(request);
+        await setupCtx.SaveChangesAsync();
+
+        return (options, request.Id);
+    }
+
     private static async Task<AppDbContext> CreateDbContextAsync()
     {
         var connection = new SqliteConnection("Data Source=:memory:");

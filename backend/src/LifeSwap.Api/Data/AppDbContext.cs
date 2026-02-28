@@ -59,6 +59,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(request => request.Reason).HasMaxLength(512).IsRequired();
             entity.Property(request => request.ReviewComment).HasMaxLength(512);
             entity.Property(request => request.ReviewerId).HasMaxLength(64);
+            entity.Property(request => request.RowVersion).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<AppNotification>(entity =>

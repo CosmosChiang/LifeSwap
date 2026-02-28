@@ -206,6 +206,7 @@ public sealed class RequestsController(
         request.CancelledAt = null;
         request.Status = RequestStatus.Submitted;
         request.SubmittedAt = DateTimeOffset.UtcNow;
+        request.RowVersion = Guid.NewGuid();
 
         dbContext.Notifications.Add(new AppNotification
         {
@@ -255,6 +256,7 @@ public sealed class RequestsController(
         request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
+        request.RowVersion = Guid.NewGuid();
 
         dbContext.Notifications.Add(new AppNotification
         {
@@ -263,7 +265,15 @@ public sealed class RequestsController(
             Message = $"你的申請 {request.Id} 已核准。",
         });
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The request was already reviewed by another administrator.");
+        }
+
         await TrySendTeamsStatusChangedAsync(request, "Approved", cancellationToken);
         return Ok(request);
     }
@@ -302,6 +312,7 @@ public sealed class RequestsController(
         request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
+        request.RowVersion = Guid.NewGuid();
 
         dbContext.Notifications.Add(new AppNotification
         {
@@ -310,7 +321,15 @@ public sealed class RequestsController(
             Message = $"你的申請 {request.Id} 已被拒絕。",
         });
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The request was already reviewed by another administrator.");
+        }
+
         await TrySendTeamsStatusChangedAsync(request, "Rejected", cancellationToken);
         return Ok(request);
     }
@@ -349,6 +368,7 @@ public sealed class RequestsController(
         request.ReviewerId = reviewerEmployeeId;
         request.ReviewComment = input.Comment;
         request.ReviewedAt = DateTimeOffset.UtcNow;
+        request.RowVersion = Guid.NewGuid();
 
         dbContext.Notifications.Add(new AppNotification
         {
@@ -357,7 +377,15 @@ public sealed class RequestsController(
             Message = $"你的申請 {request.Id} 已被退回，請修正後重新送審。",
         });
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The request was already reviewed by another administrator.");
+        }
+
         await TrySendTeamsStatusChangedAsync(request, "Returned", cancellationToken);
         return Ok(request);
     }
@@ -389,6 +417,7 @@ public sealed class RequestsController(
 
         request.Status = RequestStatus.Cancelled;
         request.CancelledAt = DateTimeOffset.UtcNow;
+        request.RowVersion = Guid.NewGuid();
 
         dbContext.Notifications.Add(new AppNotification
         {

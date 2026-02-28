@@ -45,4 +45,6 @@ public sealed class TimeOffRequest
     public DateTimeOffset? ReviewedAt { get; set; }
 
     public DateTimeOffset? CancelledAt { get; set; }
+
+    public Guid RowVersion { get; set; } = Guid.NewGuid();
 }
