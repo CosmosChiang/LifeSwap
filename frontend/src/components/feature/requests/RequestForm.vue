@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import dayjs, { type Dayjs } from 'dayjs'
+import { message } from 'ant-design-vue'
 import { useI18n } from 'vue-i18n'
 import { createRequest } from '../../../api'
 import type { CreateRequestPayload } from '../../../types'
@@ -76,6 +77,7 @@ async function handleSubmit() {
     await createRequest({
       ...payload,
     })
+    message.success(t('requestForm.createDraftSuccess'))
     emit('success')
     form.overtimeProject = ''
     form.overtimeContent = ''

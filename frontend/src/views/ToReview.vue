@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { message } from 'ant-design-vue'
 import { fetchRequests } from '../api'
 import type { TimeOffRequest } from '../types'
 import { getRequestTypeLabel } from '../utils/enums'
@@ -28,6 +29,7 @@ async function loadRequests() {
     allRequests.value = await fetchRequests()
   } catch (error) {
     console.error('Failed to load requests:', error)
+    message.error(t('review.loadFailed'))
   } finally {
     loading.value = false
   }

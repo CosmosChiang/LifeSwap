@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { CheckCircleOutlined, CloseCircleOutlined, FileTextOutlined, HourglassOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { fetchRequests } from '../api'
@@ -28,6 +29,7 @@ async function loadRequests() {
     requests.value = await fetchRequests()
   } catch (error) {
     console.error('Failed to load requests:', error)
+    message.error(t('home.loadFailed'))
   } finally {
     loading.value = false
   }

@@ -84,11 +84,13 @@ export default {
         requestType: 'Type',
         overtimeStartAt: 'Overtime Start Date',
         requestStatus: 'Status',
+        loadFailed: 'Failed to load home page data',
     },
     requests: {
         pageTitle: 'My Requests',
         createCard: 'Create Request',
         listCard: 'My Requests',
+        loadFailed: 'Failed to load your requests',
     },
     requestType: {
         overtime: 'Overtime',
@@ -123,6 +125,7 @@ export default {
         overtimeContentPlaceholder: 'Enter overtime content (required)',
         overtimeReasonPlaceholder: 'Enter overtime reason (required)',
         createDraft: 'Create Draft',
+        createDraftSuccess: 'Draft created successfully',
         validation: {
             requiredFields: 'Please fill in overtime project, content, and reason.',
             invalidOvertimeRange: 'Overtime end time must be later than overtime start date.',
@@ -330,6 +333,7 @@ export default {
     review: {
         pageTitle: 'To Review',
         cardTitle: 'Pending Reviews ({count})',
+        loadFailed: 'Failed to load pending reviews',
         columns: {
             id: 'Request ID',
             employeeId: 'Employee',
