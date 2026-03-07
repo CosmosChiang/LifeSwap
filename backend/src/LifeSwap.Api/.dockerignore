@@ -1,0 +1,20 @@
+# .dockerignore
+# 建議忽略目錄與檔案，提升 Docker build 效率與安全
+bin/
+obj/
+*.user
+*.suo
+*.log
+*.vs
+*.vscode
+*.git
+*.gitignore
+node_modules/
+Dockerfile
+entrypoint.sh
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Test.json
+appsettings.*.json
+
+# 可依實際需求調整
