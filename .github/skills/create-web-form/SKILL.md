@@ -27,22 +27,26 @@ Enable developers to build robust, accessible, and user-friendly web forms by pr
 This skill includes the following reference documentation:
 
 ### UI & Styling
+
 - `styling-web-forms.md` - Form styling techniques and best practices
 - `css-styling.md` - Comprehensive CSS reference for form styling
 
 ### User Experience
+
 - `accessibility.md` - Web accessibility guidelines for forms
 - `javascript.md` - JavaScript techniques for form functionality
 - `form-controls.md` - Native form controls and their usage
 - `progressive-web-app.md` - Progressive web app integration
 
 ### HTML Structure
+
 - `form-basics.md` - Fundamental HTML form structure
 - `aria-form-role.md` - ARIA roles for accessible forms
 - `html-form-elements.md` - Complete HTML form elements reference
 - `html-form-example.md` - Practical HTML form examples
 
 ### Server-Side Processing
+
 - `form-data-handling.md` - Network form data handling
 - `php-forms.md` - PHP form processing
 - `php-cookies.md` - Cookie management in PHP
@@ -54,6 +58,7 @@ This skill includes the following reference documentation:
 - `python-as-web-framework.md` - Python web framework basics
 
 ### Data & Network
+
 - `xml.md` - XML data format reference
 - `hypertext-transfer-protocol.md` - HTTP protocol reference
 - `security.md` - Web security best practices
