@@ -1,54 +1,133 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - main
-            - develop
-    pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+# 最小權限原則：workflow 層級預設唯讀
+permissions:
+  contents: read
+
+# 併發控制：PR 自動取消舊的執行；push 則等待不取消
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-    backend:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+  backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup .NET
-              uses: actions/setup-dotnet@v4
-              with:
-                  dotnet-version: 10.0.x
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
-            - name: Restore solution
-              run: dotnet restore LifeSwap.slnx
+      # NuGet 套件快取，以 .csproj / .slnx 雜湊作為 key
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
-            - name: Build solution
-              run: dotnet build LifeSwap.slnx --configuration Release --no-restore
+      - name: Restore solution
+        run: dotnet restore LifeSwap.slnx
 
-            - name: Test backend
-              run: dotnet test backend/tests/LifeSwap.Api.Tests/LifeSwap.Api.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal"
+      - name: Build solution
+        run: dotnet build LifeSwap.slnx --configuration Release --no-restore
 
-    frontend:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+      # 執行測試並收集覆蓋率（XPlat Code Coverage → Cobertura 格式）
+      - name: Test backend with coverage
+        run: dotnet test backend/tests/LifeSwap.Api.Tests/LifeSwap.Api.Tests.csproj --configuration Release --no-build --logger "console;verbosity=normal" --collect:"XPlat Code Coverage" --results-directory ./coverage
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22
-                  cache: npm
-                  cache-dependency-path: frontend/package-lock.json
+      - name: Upload backend coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: ./coverage
+          retention-days: 7
 
-            - name: Install frontend dependencies
-              working-directory: frontend
-              run: npm ci
+  frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Build frontend
-              working-directory: frontend
-              run: npm run build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-            - name: Test frontend
-              working-directory: frontend
-              run: npm run test
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      # 執行測試並產生覆蓋率報告（@vitest/coverage-v8）
+      - name: Test frontend with coverage
+        working-directory: frontend
+        run: npm run test -- --coverage
+
+      - name: Upload frontend coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          retention-days: 7
+
+  # 僅在 PR 時執行：掃描新增/移除的依賴是否含有已知漏洞
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+
+  # CodeQL 靜態安全分析（SAST），同時掃描 C# 與 TypeScript
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, javascript-typescript]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
